@@ -17,7 +17,6 @@ import android.database.sqlite.SQLiteDatabase;
  * 实体中包含实体 未实现  
  * 通过字段更改更改表未实现  
  * @author Zone
- *
  */
 public class Sqlite_Utils {
 	private static String DB_NAME = "Zone.db"; // 数据库名称
@@ -28,31 +27,10 @@ public class Sqlite_Utils {
 	private static Sqlite_Utils instance=null;
 	private static OnUpgrade onUpgrade=null;
 	private static OnCreate onCreate=null;
-	
 	private static boolean printLog=false;
-	public static boolean getPrintLog(){
-		return printLog;
-	}
-	public static void setPrintLog(boolean printLog){
-		Sqlite_Utils.printLog=printLog;
-	}
+	
 	private  Sqlite_Utils(Context context) {
 		helper=new Sqlite_Helper(DB_NAME, context, 9);
-	}
-//	private  Sqlite_Utils(Context context) {
-//		helper=new Sqlite_Helper(DB_NAME, context, version);
-//		helper.addUpgradeListener(onUpgrade);
-//	}
-//	private  Sqlite_Utils(Application app) {
-//		helper=new Sqlite_Helper(DB_NAME, activity, version);
-//		helper.addUpgradeListener(onUpgrade);
-//	}
-	public static String getDB_NAME() {
-		return DB_NAME;
-	}
-
-	public static  void setDB_NAME(String dB_NAME) {
-		DB_NAME = dB_NAME;
 	}
 	
 	public static void  init_listener(Context context,OnCreate onCreate,OnUpgrade onUpgrade){
@@ -84,25 +62,24 @@ public class Sqlite_Utils {
 		}
 		return instance;
 	}
-	//TODO 通过包生成   未实现
-	public  <T> void createTableByEntity(Class<T> t){
-		helper.createTableByEntity(t);
-	}
-	public  <T> void queryColumnNamesByEntity(Class<T> t){
+	public  <T> String[] queryColumnNamesByEntity(Class<T> t){
 		String[] columns=helper.getColumnNames(t);
-		StringBuilder sb=new StringBuilder(100);
-		sb.append("表名："+t.getSimpleName()+"\t{");
-		int i=0;
-		for (String string : columns) {
-			if (i == 0) {
-				sb.append(" \t" + string);
-			} else {
-				sb.append(", \t" + string);
+		if (printLog) {
+			StringBuilder sb = new StringBuilder(100);
+			sb.append("TableName:" + t.getSimpleName() + "\t{");
+			int i = 0;
+			for (String string : columns) {
+				if (i == 0) {
+					sb.append(" \t" + string);
+				} else {
+					sb.append(", \t" + string);
+				}
+				i++;
 			}
-			i++;
+			sb.append("\t}");
+			System.out.println(sb.toString());
 		}
-		sb.append("\t}");
-		System.out.println(sb.toString());
+		return columns;
 	}
 	public <T> List<T> queryEntitysByCondition(Class<T> t,String whereStr,String[] markStrArr){
 		String sql="select * from "+t.getSimpleName()+" "+whereStr;
@@ -313,6 +290,10 @@ public class Sqlite_Utils {
 		if(oldVersion!=version)
 			onUpgrade.onUpgrade(oldVersion, version,instance2);
 	}
+	//TODO 通过包生成   未实现
+	public  <T> void createTableByEntity(Class<T> t){
+		helper.createTableByEntity(t);
+	}
 	public <T> void dropTableByClass(Class<T> t){
 		// ----------------------------------删除表范例-------------------------------------------------
 				//delete from table 输出表中全部数据
@@ -336,7 +317,7 @@ public class Sqlite_Utils {
 	 * @param column_old  id不要变  别的 例如要改变 字段 name sex那就new String[]{"name","sex"}
 	 * @param column_target   如果 name 想删除 sex想改变成 hex 那就new String[]{"","hex"}
 	 */
-	public <T> void updateOrDeleteColumn(Class<T> t, String[] column_old,	String[] column_target) {
+	public <T> void updateOrDeleteColumn(Class<T> t,String[] column_old,String[] column_target) {
 		helper.column_updateOrDelete(t, column_old, column_target);
 	}
 	/**
@@ -533,5 +514,10 @@ public class Sqlite_Utils {
 			}
 	}
 
-	
+	public static boolean getPrintLog(){
+		return printLog;
+	}
+	public static void setPrintLog(boolean printLog){
+		Sqlite_Utils.printLog=printLog;
+	}
 }
