@@ -1,4 +1,4 @@
-package entity;
+package com.example.mylib_test.entity;
 
 public class DbEntity {
 	private String id;
@@ -6,8 +6,6 @@ public class DbEntity {
 	private String age;
 	private String sj;
 	private String he;
-
-
 	public String getHe() {
 		return he;
 	}
@@ -49,7 +47,6 @@ public class DbEntity {
 	}
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		System.out.println("id:"+this.getId() +"\t name"+this.getName()+"\t age"+this.getAge()+"\t sj"+this.getSj());
 		return super.toString();
 	}

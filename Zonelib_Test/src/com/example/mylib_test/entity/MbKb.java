@@ -1,4 +1,4 @@
-package entity;
+package com.example.mylib_test.entity;
 
 public class MbKb {
 	private String id;
@@ -39,7 +39,6 @@ public class MbKb {
 	}
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		System.out.println("id:"+this.getId() +"\t name"+this.getName()+"\t age"+this.getAge()+"\t sj"+this.getSj());
 		return super.toString();
 	}

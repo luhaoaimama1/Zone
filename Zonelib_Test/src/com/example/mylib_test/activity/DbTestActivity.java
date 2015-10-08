@@ -1,7 +1,8 @@
 package com.example.mylib_test.activity;
 
 import com.example.mylib_test.R;
-import entity.DbEntity;
+import com.example.mylib_test.entity.DbEntity;
+
 import Android.Zone.Sqlite.Sqlite_Utils;
 import Android.Zone.Sqlite.Sqlite_Utils.Transaction;
 import android.annotation.SuppressLint;
@@ -11,17 +12,15 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
-@SuppressLint("ShowToast")
 public class DbTestActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.a_dbtest);
+		Sqlite_Utils.setPrintLog(true);
 	}
 	@Override
 	public void onClick(View v) {
-		Toast.makeText(this, "aaa", 1);
-		System.out.println("gansha");
 		if(v.getId()==R.id.db_query){
 			Sqlite_Utils.getInstance(this).queryAllByClass(DbEntity.class);
 //			Sqlite_Utils.getInstance(this).queryEntityById(DbEntity.class,"1");
