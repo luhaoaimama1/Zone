@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view.FlowLayout_Zone xmlns:android="http://schemas.android.com/apk/res/android"
+     android:id="@+id/flowLayoutZone1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+     <Button
+        android:id="@+id/db_create"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db创建" />
+     <Button
+        android:id="@+id/db_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db增加" />
+     <Button
+        android:id="@+id/db_query"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db查询" />
+     <Button
+        android:id="@+id/db_update"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db修改" />
+     <Button
+        android:id="@+id/db_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db删除" />
+     <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:background="#00ff00"
+        android:text="页面有问题！！！！！" />
+
+</view.FlowLayout_Zone>
