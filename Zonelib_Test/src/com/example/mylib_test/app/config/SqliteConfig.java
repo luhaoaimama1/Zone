@@ -9,6 +9,7 @@ import com.example.mylib_test.entity.DbEntity;
 public class SqliteConfig {
 
 	public static void initSqlite(Context context){
+		Sqlite_Utils.setPrintLog(true);
 		Sqlite_Utils.init_listener(context,new OnCreate() {
 			@Override
 			public void onCreateTable(Sqlite_Utils instance) {

@@ -1,10 +1,18 @@
 package com.example.mylib_test.entity;
 
+import Android.Zone.Sqlite.Annotation.Column;
+import Android.Zone.Sqlite.Annotation.Table;
+
+@Table(name="TwoThree")
 public class DbEntity {
 	private String id;
+	@Column(column="nameAn")
 	private String name;
+	@Column(column="ageAn")
 	private String age;
+	@Column(column="sjAn")
 	private String sj;
+	@Column(column="heAn")
 	private String he;
 	public String getHe() {
 		return he;

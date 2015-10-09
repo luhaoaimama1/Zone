@@ -1,67 +1,93 @@
 package com.example.mylib_test.activity;
 
-import com.example.mylib_test.R;
-import com.example.mylib_test.entity.DbEntity;
+import java.util.List;
 
 import Android.Zone.Sqlite.Sqlite_Utils;
 import Android.Zone.Sqlite.Sqlite_Utils.Transaction;
-import android.annotation.SuppressLint;
+import Java.Zone.Log.PrintUtils;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Toast;
+
+import com.example.mylib_test.R;
+import com.example.mylib_test.entity.DbEntity;
 
 public class DbTestActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.a_dbtest);
-		Sqlite_Utils.setPrintLog(true);
 	}
 	@Override
 	public void onClick(View v) {
-		if(v.getId()==R.id.db_query){
-			Sqlite_Utils.getInstance(this).queryAllByClass(DbEntity.class);
-//			Sqlite_Utils.getInstance(this).queryEntityById(DbEntity.class,"1");
-//			Sqlite_Utils.getInstance(this).queryEntitysByCondition(DbEntity.class, "where id=?", new String[]{"1"});
-			return ;
-		}
 		DbEntity zeng=new DbEntity();
 		zeng.setAge("I");
-		zeng.setId("LOVE");
 		zeng.setSj("you");
 		zeng.setName("!");
-//		DbEntity update = Sqlite_Utils.getInstance(this).queryEntityById(DbEntity.class,"2");
-//		if(update!=null){
-//			update.setSj("Forever");
-//		}
+		
+		onClickTable(v,zeng);
+		onClickAdd( v,zeng);
+		onClickQuery( v,zeng);
+		onClickUpdate( v,zeng);
+		onClickDelete( v,zeng);
+	}
+	private void onClickDelete(View v, DbEntity zeng) {
 		switch (v.getId()) {
-		case R.id.db_create:
-//			Sqlite_Utils.getInstance(this).addUpgradeListener(new OnUpgrade() {
-//			
-//			@Override
-//			public void onUpgrade(SQLiteDatabase arg0, int oldVersion, int newVersion) {
-//				Sqlite_Utils.getInstance(MainActivity.this).addColumn(DbEntity.class, "sbshibu");
-//			}
-//		});
-//		Sqlite_Utils.getInstance(MainActivity.this).addColumn(DbEntity.class, "sbshibu");
-//		Sqlite_Utils.getInstance(MainActivity.this).updateOrDeleteColumn(DbEntity.class, new String[]{"he"}, new String[]{"hexihuan"});
-		Sqlite_Utils.getInstance(this).createTableByEntity(DbEntity.class);
-//		Sqlite_Utils.getInstance(this).createTableByEntity(MbKb.class);
-//		Sqlite_Utils.getInstance(this).queryColumnNamesByEntity(DbEntity.class);
-//		Sqlite_Utils.getInstance(this).queryColumnNamesByEntity(MbKb.class);
+		case R.id.db_delete:
+			Sqlite_Utils.getInstance(this).removeEntity(zeng);
 			break;
+		case R.id.db_deleteAll:
+			Sqlite_Utils.getInstance(this).removeAllByClass(DbEntity.class);	
+			break;
+		case R.id.db_deleteByC:
+			Sqlite_Utils.getInstance(this).removeEntityByCondition(DbEntity.class, "where _id_ > ?", new String[]{"5"});
+			break;
+
+		default:
+			break;
+		}
+	}
+	private void onClickUpdate(View v, DbEntity zeng) {
+		switch (v.getId()) {
+		case R.id.db_update:
+			zeng.setId("1");
+			zeng.setName("pangciµƒÀµ");
+//			//ÃÌº”≤‚ ‘
+			Sqlite_Utils.getInstance(this).addOrUpdateEntity(zeng);
+			break;
+		case R.id.db_updateByC:
+			Sqlite_Utils.getInstance(this).UpdateByCondition(DbEntity.class, " set _name_ =? " , new String[]{"pangci"});
+			break;
+
+		default:
+			break;
+		}
+	}
+	private void onClickQuery(View v, DbEntity zeng) {
+		switch (v.getId()) {
+		case R.id.db_query:
+			Sqlite_Utils.getInstance(this).queryAllByClass(DbEntity.class);
+//			Sqlite_Utils.getInstance(this).queryEntityById(DbEntity.class,"1");
+			break;
+		case R.id.db_queryByC:
+			List<DbEntity> temp = Sqlite_Utils.getInstance(this).queryEntitysByCondition(DbEntity.class, "where _id_ in(?,?)", new String[]{"1","3"});
+			break;
+
+		default:
+			break;
+		}
+	}
+	private void onClickAdd(View v, DbEntity zeng) {
+		switch (v.getId()) {
 		case R.id.db_add:
 //			Sqlite_Utils.getInstance(MainActivity.this).addColumn(DbEntity.class, "sbshibu");
-			Sqlite_Utils.getInstance(this).addEntity(zeng);	
+			Sqlite_Utils.getInstance(this).addEntity(zeng);
 			break;
-		case R.id.db_update:
-//			Sqlite_Utils.getInstance(this).UpdateEntity(db);
-//			//ÃÌº”≤‚ ‘
-//			Sqlite_Utils.getInstance(this).addOrUpdateEntity(zeng);
-//			//–ﬁ∏ƒ≤‚ ‘
-//			Sqlite_Utils.getInstance(this).addOrUpdateEntity(update);
+		case R.id.db_addOrUpdateEntity:
+			Sqlite_Utils.getInstance(this).addOrUpdateEntity(zeng);
+			break;
+		case R.id.tran_add:
 			Transaction tran= Sqlite_Utils.getInstance(this).getTransaction();
 			tran.beginTransaction();
 			for (int i = 0; i < 10; i++) {
@@ -70,18 +96,28 @@ public class DbTestActivity extends Activity implements OnClickListener{
 				tran.addEntity_Transaction(zeng);
 			}
 			tran.endTransaction();
-			
-//			Sqlite_Utils.getInstance(this).UpdateByCondition(DbEntity.class, " set name =? " , new String[]{"pangci"});
-//			Sqlite_Utils.getInstance(this).UpdateByCondition(DbEntity.class, " set name =? " , new String[]{"pangci"});
-			
+			break;	
+		default:
 			break;
-		case R.id.db_delete:
-//			Sqlite_Utils.getInstance(this).removeEntity(update);
-//			Sqlite_Utils.getInstance(this).removeEntityByCondition(DbEntity.class, "where id < ?", new String[]{5});
-			Sqlite_Utils.getInstance(this).removeAllByClass(DbEntity.class);
-			
+		}
+	}
+	private void onClickTable(View v, DbEntity zeng) {
+		switch (v.getId()) {
+		case R.id.db_create:
+//			Sqlite_Utils.getInstance(MainActivity.this).addColumn(DbEntity.class, "sbshibu");
+				//–ﬁ∏ƒ◊÷∂Œ ªÚ’ﬂ…æ≥˝◊÷∂Œ
+//			Sqlite_Utils.getInstance(MainActivity.this).updateOrDeleteColumn(DbEntity.class, new String[]{"he"}, new String[]{"hexihuan"});
+			Sqlite_Utils.getInstance(this).createTableByEntity(DbEntity.class);
+//			Sqlite_Utils.getInstance(this).createTableByEntity(MbKb.class);
 			break;
-
+	
+		case R.id.db_Tabledelete:
+			Sqlite_Utils.getInstance(this).dropTableByClass(DbEntity.class);
+			break;
+		case R.id.db_queryColumn:
+			Sqlite_Utils.getInstance(this).queryColumnNamesByEntity(DbEntity.class);
+			break;
+			
 		default:
 			break;
 		}

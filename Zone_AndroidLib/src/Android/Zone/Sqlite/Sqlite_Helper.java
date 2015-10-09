@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import Android.Zone.Sqlite.Annotation.utils.AnUtils;
 import Android.Zone.Sqlite.Inner.TempUtils;
 import Android.Zone.Sqlite.Sqlite_Utils.OnUpgrade;
 import android.content.Context;
@@ -63,7 +64,8 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			if(willAddColumnStr.equals(item))
 				return;
 		}
-		String sql="ALTER TABLE "+ table.getSimpleName()+" ADD "+willAddColumnStr+" TEXT(100) ";
+		//TODO 字段长度
+		String sql="ALTER TABLE "+ 	AnUtils.getTableAnnoName(table)+" ADD "+willAddColumnStr+" TEXT(100) ";
 		SQLiteDatabase db = this.getWritableDatabase();
 		try {
 			db.execSQL(sql);
@@ -128,7 +130,7 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			//完全重复没必要继续
 			return;
 		}
-		String tableName=t.getSimpleName();
+		String tableName=AnUtils.getTableAnnoName(t);
 		//1、未命名旧表之前 怕存在  如果存在 先删除
 		String sql_drop1 = "DROP TABLE IF EXISTS " + tableName + "_old";
 		try {
@@ -149,7 +151,6 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			return;
 		}
 		
-	
 		for (String item : column_old_list) {
 			for (String string : columnNames) {
 				if(item.equals(string)){
@@ -163,6 +164,7 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 		sb.append("(id INTEGER PRIMARY KEY AUTOINCREMENT ");
 		
 		for (String item : columnNames) {
+			//TODO 字段长度
 			if(!"id".equals(item)&&!"".equals(item))
 				sb.append(","+item+" text(100)");
 		}
@@ -256,22 +258,25 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 		StringBuffer sb=new StringBuffer(100);
 		sb.append(" CREATE TABLE  IF NOT EXISTS  ");
 		Field[] fieds = t.getDeclaredFields();
-		sb.append(t.getSimpleName() +"(");
+		sb.append(AnUtils.getTableAnnoName(t) +"(");
 		int i=0;
 		for (Field field : fieds) {
 			if (i == 0) {
 				if (field.getName().equals("id")) {
 					sb.append("  id INTEGER PRIMARY KEY AUTOINCREMENT ");
 				} else {
+					/** 判断类型是  String */
+					//TODO  字段长度 还未弄呢
 					if(TempUtils.typeIsEquals(String.class, field.getGenericType()))
-					sb.append(field.getName() + "  text(100)");
+					sb.append(AnUtils.getAnnoColumnStrByField(field, t) + "  text(100)");
 				}
 			} else {
 				if (field.getName().equals("id")) {
 					sb.append(" , id INTEGER PRIMARY KEY AUTOINCREMENT ");
 				} else {
+					//TODO  字段长度 还未弄呢
 					if(TempUtils.typeIsEquals(String.class, field.getGenericType()))
-					sb.append(" ," + field.getName() + "  text(100)");
+					sb.append(" ," + AnUtils.getAnnoColumnStrByField(field, t) + "  text(100)");
 				}
 			}
 			i++;
@@ -290,7 +295,7 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 	 * @return  返回要查询的表中的字段
 	 */
 	public <T> String[] getColumnNames(Class<T> t) {
-		String tableName=t.getSimpleName();
+		String tableName=AnUtils.getTableAnnoName(t);
 		String[] lin2 = null;
 		String sql = "select * from " + tableName;
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -340,13 +345,15 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 		try {
 			cursor = db.rawQuery(sql, str);
 			//此查询中得到的字段
-			String[] lin2 = cursor.getColumnNames();
+			String[] columnNames = cursor.getColumnNames();
 			Field[] fieds = t.getDeclaredFields();
 			//得到实体中字段
-			String[] entityColumn=new String[fieds.length];
+			List<Field> fieldList=new ArrayList<Field>();
 			for (int i = 0; i < fieds.length; i++) {
-				if(TempUtils.typeIsEquals(String.class, fieds[i].getGenericType()))
-					entityColumn[i]=fieds[i].getName();
+				if(TempUtils.typeIsEquals(String.class, fieds[i].getGenericType())){
+					fieldList.add(fieds[i]);
+				}
+					
 			}
 			if (cursor.getCount() == 0) {
 			} else {
@@ -355,24 +362,26 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 					 //建立一个实体
 					T lin_entity=(T) t.newInstance();
 					//set之前  首先看数据库中得到字段 实体字段有没有  有的话就可以走set方法
-					for (int i = 0; i < lin2.length; i++) {
+					for (int i = 0; i < columnNames.length; i++) {
 						boolean columnNameIsExist = false;
-						for (int j = 0; j < entityColumn.length; j++) {
-							if (lin2[i].equals(entityColumn[j])) {
+						int fieldIndex=-1;
+						for (Field item : fieldList) {
+							if (columnNames[i].equals(AnUtils.getAnnoColumnStrByField(item, t))) {
+								fieldIndex=fieldList.indexOf(item);
 								columnNameIsExist = true;
 							}
 						}
 						if (columnNameIsExist) {
 //							 如果字段存在 开始往实体类 set
 //							id   setId(String id)  效果这样
-							String a = lin2[i];
+							String a = fieldList.get(fieldIndex).getName();
 							String b=a.substring(0, 1).toUpperCase();
 							String c=a.substring(1);
 							String finalStr="set"+b+c;
 							//现在只支持String  
 							Method method = t.getMethod(finalStr, String.class);
 							//反射执行 set方法
-							method.invoke(lin_entity, cursor.getString(cursor.getColumnIndex(lin2[i]))+"");
+							method.invoke(lin_entity, cursor.getString(cursor.getColumnIndex(columnNames[i]))+"");
 						}
 					}
 					//所有字段都set完毕  把实体 填进list中
