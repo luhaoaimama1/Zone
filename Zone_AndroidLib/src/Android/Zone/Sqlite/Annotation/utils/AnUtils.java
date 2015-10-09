@@ -55,13 +55,23 @@ public class AnUtils {
 		}
 		return tempStr;
 	}
-	public static String getAnnoColumnStrByField(Field f,Class<?> t){
+	public static String getAnnoColumn_Name_ByField(Field f,Class<?> t){
 		String temp=null;
 		Column anno = f.getAnnotation(Column.class);
 		if(anno!=null){
 			temp=anno.column();
 		}else{
 			temp=f.getName();
+		}
+		return temp;
+	}
+	public static String getAnnoColumn_Length_ByField(Field f,Class<?> t){
+		String temp=null;
+		Column anno = f.getAnnotation(Column.class);
+		if(anno!=null){
+			temp=anno.length();
+		}else{
+			temp="100";
 		}
 		return temp;
 	}

@@ -160,11 +160,18 @@
         android:text="分割线" />
     
     <Button
-        android:id="@+id/tran_add"
+        android:id="@+id/tran_add_fail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="4dp"
         android:onClick="onClick"
-        android:text="db事物增加" />
+        android:text="db事物增加_失败" />
+      <Button
+        android:id="@+id/tran_add_success"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db事物增加_成功" />
 
 </view.FlowLayout_Zone>

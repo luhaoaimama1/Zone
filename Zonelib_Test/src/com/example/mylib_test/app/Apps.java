@@ -16,6 +16,7 @@ package com.example.mylib_test.app;
  *******************************************************************************/
 
 
+import Android.Zone.Sqlite.Sqlite_Utils;
 import android.annotation.TargetApi;
 import android.app.Application;
 import android.os.Build;
@@ -27,6 +28,7 @@ import com.example.mylib_test.app.config.SqliteConfig;
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  */
 public class Apps extends Application {
+	public static Sqlite_Utils su;
 	// SDCard路径
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	@SuppressWarnings("unused")
@@ -38,7 +40,9 @@ public class Apps extends Application {
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectAll().penaltyDeath().build());
 		}
 		//初始化 sqlite
+		Sqlite_Utils.setVersion(2);
 		SqliteConfig.initSqlite(this);
+		su=Sqlite_Utils.getInstance(this);
 		//初始化ImageLoader
 		ImageLoaderConfig.initImageLoader(getApplicationContext());
 	}
