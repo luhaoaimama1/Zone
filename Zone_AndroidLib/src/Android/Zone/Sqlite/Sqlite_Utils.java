@@ -434,7 +434,7 @@ public class Sqlite_Utils {
 		}
 	}
 	public <T> void addColumn(Class<T> t,String willAddColumnStr){
-		helper.addColumn(t, willAddColumnStr,getTranDatabase());
+		helper.addColumn(t, willAddColumnStr,"1000",getTranDatabase());
 	}
 	/**
 	 * 
@@ -442,7 +442,7 @@ public class Sqlite_Utils {
 	 * @param column_old  id不要变  别的 例如要改变 字段 name sex那就new String[]{"name","sex"}
 	 * @param column_target   如果 name 想删除 sex想改变成 hex 那就new String[]{"","hex"}
 	 */
-	public <T> void updateOrDeleteColumn(Class<T> t,String[] column_old,String[] column_target) {
+	public <T> void updateOrDeleteColumn(Class<T> t) {
 //		helper.column_updateOrDelete(t, column_old, column_target,getTranDatabase());
 	}
 	public static boolean getPrintLog(){
