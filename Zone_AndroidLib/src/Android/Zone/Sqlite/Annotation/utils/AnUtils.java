@@ -60,6 +60,10 @@ public class AnUtils {
 		Column anno = f.getAnnotation(Column.class);
 		if(anno!=null){
 			temp=anno.column();
+			//TODO  但注解是""的时候呢  有这么恶心的  我就抛出异常 让他恶心我
+			if("".equals(temp)){
+				throw new IllegalStateException("注解column 不能为 空字符串");
+			}
 		}else{
 			temp=f.getName();
 		}

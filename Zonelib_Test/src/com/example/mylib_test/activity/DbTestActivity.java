@@ -21,7 +21,7 @@ public class DbTestActivity extends Activity implements OnClickListener{
 		DbEntity zeng=new DbEntity();
 		zeng.setAge("I");
 		zeng.setSj("you");
-		zeng.setName("!");
+//		zeng.setName("!");
 		
 		onClickTable(v,zeng);
 		onClickAdd( v,zeng);

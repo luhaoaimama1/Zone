@@ -3,32 +3,29 @@ package Android.Zone.Sqlite;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
 import Android.Zone.Sqlite.Annotation.utils.AnUtils;
 import Android.Zone.Sqlite.Inner.TempUtils;
-import Android.Zone.Sqlite.Sqlite_Utils.OnUpgrade;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
+//TODO   创建表和添加表的时候成功的把 那个写入字段
 public class Sqlite_Helper  extends SQLiteOpenHelper  {
 	private static final String TAG="Sqlite_Helper";
 	private static final String SQL_ERR="sql执行失败 执行的sql为";
 	
-	private boolean tranCloseDb=true;
+	private boolean noTran=true;
 
 	
 	public boolean isTran() {
-		return tranCloseDb;
+		return noTran;
 	}
 
 	public void setTran(boolean tran) {
-		this.tranCloseDb = tran;
+		this.noTran = tran;
 	}
 
 	public Sqlite_Helper(String DbNname, Context context, int version) {
@@ -43,6 +40,29 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 	}
 
 	/**
+	 * 因为  他都是在别的方法中调用所以  db不关闭
+	 * @param t
+	 * @param db
+	 * @return
+	 */
+	public <T> boolean existTable(Class<T> t,SQLiteDatabase db){
+		boolean result=false;
+		String sql="SELECT COUNT(*) FROM sqlite_master where type='table' and name='"+	AnUtils.getTableAnnoName(t)+"'";
+		try {
+			 Cursor cursor = db.rawQuery(sql, null);
+             if(cursor.moveToNext()){
+                     int count = cursor.getInt(0);
+                     if(count>0){
+                             result = true;
+                     }
+             }
+		} catch (SQLException e) {
+			Log.e(TAG+"报错信息",SQL_ERR + sql);
+			e.printStackTrace();
+		}
+		return result;
+	}
+	/**
 	 *  外部用的创建表的方法 
 	 * <br>顾可用于创建多表
 	 * @param <T>
@@ -50,7 +70,15 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 	 * @param db2 你懂的 
 	 * @param Create_Sql 额外创建的表语句
 	 */
-	public  <T> void createTableByEntity(Class<T> t,SQLiteDatabase db) {
+	public  <T> boolean createTableByEntity(Class<T> t,SQLiteDatabase db) {
+		if(existTable(t, db)){//提高效率
+			//如果表存在即不用管了
+			if (noTran) {
+				//如果没有事物 就关闭
+				db.close();
+			}
+			return false;
+		}
 		String Create_Sql=byClassToGenerateCreateSqlString(t);
 		// --------------------------Create
 		// table范例-----------------------------------------------------
@@ -58,18 +86,22 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 		// + "_id INTEGER PRIMARY KEY,"
 		// + "name TEXT,"
 		// + "sex);";
+		boolean success=false;
 		try {
 			db.execSQL(Create_Sql);
+			success=true;
 		} catch (SQLException e) {
 			Log.e(TAG+"报错信息",SQL_ERR + Create_Sql);
 			e.printStackTrace();
+			return success;
 		} finally {
-				if (tranCloseDb) {
+				if (noTran) {
 					db.close();
 				}
 		}
+		return success;
 	}
-	public <T> void addColumn(Class<T> table,String willAddColumnStr,SQLiteDatabase db){
+	public <T> void addColumn(Class<T> table,String willAddColumnStr,String length,SQLiteDatabase db){
 //		 db.execSQL("ALTER TABLE "+ MyHelper.TABLE_NAME+" ADD sex TEXT");
 		String[] columns = getColumnNames(table,db);
 		for (String item : columns) {
@@ -77,14 +109,14 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 				return;
 		}
 		//TODO 字段长度
-		String sql="ALTER TABLE "+ 	AnUtils.getTableAnnoName(table)+" ADD "+willAddColumnStr+" TEXT(100) ";
+		String sql="ALTER TABLE "+ 	AnUtils.getTableAnnoName(table)+" ADD "+willAddColumnStr+" TEXT("+length+") ";
 		try {
 			db.execSQL(sql);
 		} catch (SQLException e) {
 			Log.e(TAG+"报错信息",SQL_ERR+ sql);
 			e.printStackTrace();
 		} finally {
-				if (tranCloseDb) {
+				if (noTran) {
 					db.close();
 				}
 		}
@@ -96,159 +128,156 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 	}
 	/**
 	 * 可以走 删除字段  但是 不用既可  不走删除字段  直走 length修改
-	 * 
-	 * 
-	 * 更改字段 删除字段的时候用 （一般用在版本更新 发现db的bug 还是外边调用好了） 可以复用
-	 * <br>自带db关闭 放心
-	 * @param <T>
-	 * @param tableName
+	 * 即这里不解析  最原始的 
 	 *            要更改字段的表名
-	 * @param columns_new_create_Param
 	 *            创建新表的语句的后半段
 	 * columns_new_create = "(id INTEGER PRIMARY KEY AUTOINCREMENT , name varchar(20));";
-	 * @param import_columns_Param
 	 *            原数据导入到新数据的字段
 	 *   import_columns = " id, name ";
+	 * @param t
+	 * @param updateColumnList
+	 * @param db
 	 */
-//	public <T> void column_updateOrDelete(Class<T> t, List<UpdateColumn> updateColumnList  ,SQLiteDatabase db ) {
-////		例子：dao.column_updateOrDelete(Sqlite_Dao.TABLE_NAME, Sqlite_Dao.columns_new_create,Sqlite_Dao.import_columns);		
-//		
-//		// Sqlite 不支持直接修改字段的名称。
-//		// 我们可以使用别的方法来实现修改字段名。
-//		// 1、修改原表的名称
-//		// ALTER TABLE table RENAME TO tableOld;
-//		// 2、新建修改字段后的表
-//		// CREATE TABLE table(ID INTEGER PRIMARY KEY AUTOINCREMENT,
-//		// Modify_Username text not null);
-//		// 3、从旧表中查询出数据 并插入新表
-//		// INSERT INTO table SELECT ID,Username FROM tableOld;
-//		// 4、删除旧表
-//		// DROP TABLE tableOld;
+	public <T> void column_updateOrDelete(Class<T> t,String str_noUpdateList, List<UpdateColumn> updateColumnList  ,SQLiteDatabase db ) {
+//		例子：dao.column_updateOrDelete(Sqlite_Dao.TABLE_NAME, Sqlite_Dao.columns_new_create,Sqlite_Dao.import_columns);		
+		
+		// Sqlite 不支持直接修改字段的名称。
+		// 我们可以使用别的方法来实现修改字段名。
+		// 1、修改原表的名称
+		// ALTER TABLE table RENAME TO tableOld;
+		// 2、新建修改字段后的表
+		// CREATE TABLE table(ID INTEGER PRIMARY KEY AUTOINCREMENT,
+		// Modify_Username text not null);
+		// 3、从旧表中查询出数据 并插入新表
+		// INSERT INTO table(id,username) SELECT ID,Username FROM tableOld;
+		// 4、删除旧表
+		// DROP TABLE tableOld;
+		
+		
+		List<String> columnNames=new ArrayList<String>();
+		List<String> columnNames_Target=new  ArrayList<String>();
+		for (UpdateColumn item : updateColumnList) {
+			columnNames.add(item.column_old);
+			columnNames_Target.add(item.column_target);
+		}
+		
 //		Field[] fields = t.getDeclaredFields();
-//		List<String> columnNames=new ArrayList<String>();
-//		List<String> columnNames_copy=new  ArrayList<String>();
+//		List<String> annoStringList=new  ArrayList<String>();
+//			//得到所有的字段  最新的
 //		for (Field field : fields) {
 //			field.setAccessible(true);
-//			columnNames.add(field.getName());
-//			columnNames_copy.add(field.getName());
+//			annoStringList.add(AnUtils.getAnnoColumn_Name_ByField(field, t));
 //		}
-//		List<String> column_old_list = Arrays.asList(column_old);
-//		for (String string : column_old_list) {
-//			if(!columnNames.contains(string))
-//				throw new IllegalArgumentException("column_old is not exist to Entity");
-//		}
-//	
-//		
-////不用判断重复了 因为 可能是 length改变了
-////		//判断是否重复
-////		int j=0;
-////		for (int i = 0; i < column_old.length; i++) {
-////			if(column_old[i].equals(column_target[i])){
-////				j++;
-////			}
-////		}
-////		if(j==column_old.length){
-////			//完全重复没必要继续
-////			return;
-////		}
-//		String tableName=AnUtils.getTableAnnoName(t);
-//		//1、未命名旧表之前 怕存在  如果存在 先删除
-//		String sql_drop1 = "DROP TABLE IF EXISTS " + tableName + "_old";
-//		try {
-//			Operating(sql_drop1, new Object[] {},db);
-//		} catch (Exception e) {
-//			Log.e(TAG+"报错信息",SQL_ERR+ sql_drop1+"______________删除此表的old表的表失败");
-//			return;
-//		}
-//		//2、未命名旧表之前 怕存在  如果存在 先删除
-//		String rename = "ALTER TABLE " + tableName + "  RENAME TO " + tableName
-//				+ "_old";
-//		try {
-//			db.execSQL(rename);
-//		} catch (Exception e) {
-//			Log.e(TAG+"报错信息",SQL_ERR+ rename+"______________把表命名成old系列失败");
-//			if (tranCloseDb) {
-//				db.close();
-//			}
-//			return;
-//		}
-//		//3、新建修改字段后的表  即现在的类创建表
-//		String table=byClassToGenerateCreateSqlString(t);
-//		try {
-//			db.execSQL(table);
-//		} catch (Exception e) {
-//			Log.e(TAG+"报错信息",SQL_ERR+ table+"______________创建新的空表失败");
-//			if (tranCloseDb) {
-//				db.close();
-//			}
-//			return;
-//		}
-//		//当字段是""  即查询的是老子段对应的 字段去除
-//		//当字段不是空  即原来的字段即可
-//		List<String> column_target_list=Arrays.asList(column_target);
-//		for (String item : column_target_list) {
-//			if("".equals(item)){
-//				int index=column_target_list.indexOf(item);
-//				String str=column_old[index];
-//				columnNames_copy.remove(str);
-//			}
-//		}
-//		String import_columns = " ";
-//		for (String string : columnNames_copy) {
-//			import_columns+=string+",";
-//		}
-////		String import_columns = " id, name ";
-//		String import_columns_Param=import_columns.substring(0,import_columns.length()-1);
-//		//4、从旧表中查询出数据 并插入新表
-//		String ex = "insert into " + tableName + " select "
-//				+ import_columns_Param + "  from " + tableName + "_old";
-//		try {
-//			Operating(ex, new Object[] {},db);
-//		} catch (Exception e) {
-//			Log.e(TAG+"报错信息",SQL_ERR+ ex+"______________old表导入新表失败");
-//			if (tranCloseDb) {
-//				db.close();
-//			}
-//			return;
-//			
-//		}
-//		// 5、删除旧表
-//		String sql_drop = "DROP TABLE IF EXISTS " + tableName + "_old";
-//		try {
-//			Operating(sql_drop, new Object[] {},db);
-//		} catch (Exception e) {
-//			Log.e(TAG+"报错信息",SQL_ERR+ sql_drop+"______________删除old表失败");
-//			if (tranCloseDb) {
-//				db.close();
-//			}
-//			return;
-//		}
-//	
-//		if (tranCloseDb) {
-//			db.close();
-//		}
-//		StringBuilder print_column_old_sb=new StringBuilder();
-//		StringBuilder print_column_target_sb=new StringBuilder();
-//		for (int i = 0; i < column_old.length; i++) {
-//			if(i==0){
-//				print_column_old_sb.append("{"+column_old[i]);
-//				print_column_target_sb.append("{"+column_target[i]);
-//			}else{
-//				print_column_old_sb.append(","+column_old[i]);
-//				print_column_target_sb.append(","+column_target[i]);
-//			}
-//		}
-//		print_column_old_sb.append("}");
-//		print_column_target_sb.append("}");
-//		if (Sqlite_Utils.getPrintLog()) {
-//			Log.d(TAG,
-//					"表：" + t.getSimpleName() + "\t "
-//							+ print_column_old_sb.toString() + "---->>>"
-//							+ print_column_target_sb.toString()
-//							+ "更改/删除字段---------成功");
-//		}
+		
+		
+//		//找到没有更新的字段
+//		List<String> noUpdateList=new  ArrayList<String>();
 //
-//	}
+//		for (String item : annoStringList) {
+//			boolean  isHave=false;
+//			for (UpdateColumn update : updateColumnList) {
+//				if(item.equals(update.column_target))
+//					isHave=true;
+//			}
+//			if(!isHave){
+//				//最新的所有字段  不包含 最新更改的字段 那么就是没有更新的字段
+//				noUpdateList.add(item);//没有更新就添加
+//			}
+//		}
+//不用判断重复了 因为 可能是 length改变了
+//		//判断是否重复
+//		int j=0;
+//		for (int i = 0; i < column_old.length; i++) {
+//			if(column_old[i].equals(column_target[i])){
+//				j++;
+//			}
+//		}
+//		if(j==column_old.length){
+//			//完全重复没必要继续
+//			return;
+//		}
+		String tableName=AnUtils.getTableAnnoName(t);
+		//1、未命名旧表之前 怕存在  如果存在 先删除
+		String sql_drop1 = "DROP TABLE IF EXISTS " + tableName + "_old";
+		try {
+			Operating(sql_drop1, new Object[] {},db);
+		} catch (Exception e) {
+			Log.e(TAG+"报错信息",SQL_ERR+ sql_drop1+"______________删除此表的old表的表失败");
+			return;
+		}
+		//2、未命名旧表之前 怕存在  如果存在 先删除
+		String rename = "ALTER TABLE " + tableName + "  RENAME TO " + tableName
+				+ "_old";
+		try {
+			db.execSQL(rename);
+		} catch (Exception e) {
+			Log.e(TAG+"报错信息",SQL_ERR+ rename+"______________把表命名成old系列失败");
+			if (noTran) {
+				db.close();
+			}
+			return;
+		}
+		//3、新建修改字段后的表  即现在的类创建表
+		String table=byClassToGenerateCreateSqlString(t);
+		try {
+			db.execSQL(table);
+		} catch (Exception e) {
+			Log.e(TAG+"报错信息",SQL_ERR+ table+"______________创建新的空表失败");
+			if (noTran) {
+				db.close();
+			}
+			return;
+		}
+		//当字段是""  即查询的是老子段对应的 字段去除
+		//当字段不是空  即原来的字段即可
+//		(id,username) SELECT ID,Username 
+		String import_columns_Param=str_noUpdateList+","+listMergeSymbol(columnNames, ",");
+		String import_columns_Param_new=str_noUpdateList+","+listMergeSymbol(columnNames_Target, ",");
+		
+		//4、从旧表中查询出数据 并插入新表
+		String ex = "insert into " + tableName + " ("+import_columns_Param_new+") select "
+				+ import_columns_Param + "  from " + tableName + "_old";
+		try {
+			Operating(ex, new Object[] {},db);
+		} catch (Exception e) {
+			Log.e(TAG+"报错信息",SQL_ERR+ ex+"______________old表导入新表失败");
+			if (noTran) {
+				db.close();
+			}
+			return;
+			
+		}
+		// 5、删除旧表
+		String sql_drop = "DROP TABLE IF EXISTS " + tableName + "_old";
+		try {
+			Operating(sql_drop, new Object[] {},db);
+		} catch (Exception e) {
+			Log.e(TAG+"报错信息",SQL_ERR+ sql_drop+"______________删除old表失败");
+			if (noTran) {
+				db.close();
+			}
+			return;
+		}
+	
+		if (noTran) {
+			db.close();
+		}
+	
+		if (Sqlite_Utils.getPrintLog()) {
+			Log.d(TAG,"表：" + t.getSimpleName() + "\t "
+							+ listMergeSymbol(columnNames, ",") + "---->>>"
+							+ listMergeSymbol(columnNames_Target, ",")+ "更改/删除字段---------成功");
+		}
+
+	}
+	private String listMergeSymbol(List<String> noUpdateList,String symbol){
+		StringBuffer temp=new StringBuffer();
+		for (String string : noUpdateList) {
+			temp.append(string+symbol);
+		}
+		String str_noUpdateList=temp.toString().substring(0,temp.toString().length()-1);
+		return str_noUpdateList;
+	}
 	/**
 	 * 作用把这个类的生成表数据更改了  在通过调用此类的create_table 即可 创建表
 	 *  <br> 这里有例子可以进来看   注释的部分为：通过 实体类 类创建表
@@ -274,15 +303,17 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 					sb.append("  id INTEGER PRIMARY KEY AUTOINCREMENT ");
 				} else {
 					/** 判断类型是  String */
-					if(TempUtils.typeIsEquals(String.class, field.getGenericType()))
-					sb.append(AnUtils.getAnnoColumn_Name_ByField(field, t) + "  text("+AnUtils.getAnnoColumn_Length_ByField(field, t)+")");
+					if(TempUtils.typeIsEquals(String.class, field.getGenericType())){
+						sb.append(AnUtils.getAnnoColumn_Name_ByField(field, t) + "  text("+AnUtils.getAnnoColumn_Length_ByField(field, t)+")");
+					}
 				}
 			} else {
 				if (field.getName().equals("id")) {
 					sb.append(" , id INTEGER PRIMARY KEY AUTOINCREMENT ");
 				} else {
-					if(TempUtils.typeIsEquals(String.class, field.getGenericType()))
-					sb.append(" ," + AnUtils.getAnnoColumn_Name_ByField(field, t) + "  text("+AnUtils.getAnnoColumn_Length_ByField(field, t)+")");
+					if(TempUtils.typeIsEquals(String.class, field.getGenericType())){
+						sb.append(" ," + AnUtils.getAnnoColumn_Name_ByField(field, t) + "  text("+AnUtils.getAnnoColumn_Length_ByField(field, t)+")");
+					}
 				}
 			}
 			i++;
@@ -312,7 +343,7 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			Log.e(TAG+"报错信息","表中无字段，不可用此方法");
 			e.printStackTrace();
 		} finally {
-			if (tranCloseDb) {
+			if (noTran) {
 				db.close();
 			}
 			if(cursor!=null){
@@ -401,7 +432,7 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			if (cursor!=null) {
 				cursor.close();
 			}
-			if (tranCloseDb) {
+			if (noTran) {
 				db.close();
 			}
 		}
@@ -449,9 +480,9 @@ public class Sqlite_Helper  extends SQLiteOpenHelper  {
 			return false;
 		} finally {
 			if (Sqlite_Utils.getPrintLog()) {
-				System.out.println("是否关闭了数据库："+ (tranCloseDb == true ? "是" : "否"));
+				System.out.println("是否关闭了数据库："+ (noTran == true ? "是" : "否"));
 			}
-			if (tranCloseDb) {
+			if (noTran) {
 				db.close();
 			}
 		}
