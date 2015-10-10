@@ -1,15 +1,12 @@
 package com.example.mylib_test.activity;
 
 import java.util.List;
-
 import Android.Zone.Sqlite.Sqlite_Utils;
-import Android.Zone.Sqlite.Sqlite_Utils.Transaction;
-import Java.Zone.Log.PrintUtils;
+import Android.Zone.Sqlite.Sqlite_Utils.Work;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-
 import com.example.mylib_test.R;
 import com.example.mylib_test.entity.DbEntity;
 
@@ -87,15 +84,31 @@ public class DbTestActivity extends Activity implements OnClickListener{
 		case R.id.db_addOrUpdateEntity:
 			Sqlite_Utils.getInstance(this).addOrUpdateEntity(zeng);
 			break;
-		case R.id.tran_add:
-			Transaction tran= Sqlite_Utils.getInstance(this).getTransaction();
-			tran.beginTransaction();
-			for (int i = 0; i < 10; i++) {
-//				if(i==5)
-//					throw new NullPointerException();
-				tran.addEntity_Transaction(zeng);
-			}
-			tran.endTransaction();
+		case R.id.tran_add_fail:
+			final DbEntity zengTemp = zeng;
+			Sqlite_Utils.getInstance(this).workWithTran(new Work() {
+				
+				@Override
+				public void work() {
+					for (int i = 0; i < 10; i++) {
+						if(i==5)
+							throw new NullPointerException();
+						Sqlite_Utils.getInstance(DbTestActivity.this).addEntity(zengTemp);
+					}
+				}
+			});
+			break;	
+		case R.id.tran_add_success:
+			final DbEntity zengTemp1 = zeng;
+			Sqlite_Utils.getInstance(this).workWithTran(new Work() {
+				
+				@Override
+				public void work() {
+					for (int i = 0; i < 10; i++) {
+						Sqlite_Utils.getInstance(DbTestActivity.this).addEntity(zengTemp1);
+					}
+				}
+			});
 			break;	
 		default:
 			break;

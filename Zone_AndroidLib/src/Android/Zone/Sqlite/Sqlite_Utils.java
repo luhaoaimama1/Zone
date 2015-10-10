@@ -3,12 +3,9 @@ package Android.Zone.Sqlite;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-
 import Android.Zone.Sqlite.Annotation.utils.AnUtils;
 import Android.Zone.Utils.SharedUtils;
 import Java.Zone.Log.PrintUtils;
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 //TODO 实体类id字段的设计   实体类中包含实体类的操作
@@ -23,17 +20,21 @@ import android.database.sqlite.SQLiteDatabase;
  */
 public class Sqlite_Utils {
 	private static String DB_NAME = "Zone.db"; // 数据库名称
-	//这个是真正该本用的 
-	private  static final int version=7;//默认第一个版本是0
+	//因为一个 应用就一个数据库 所以版本号  静态就OK了
+	private  static  int version=1;//默认第一个版本是1  
 	private  static final  String SHARE_TAG="zone_db_version";
 	private Sqlite_Helper helper;
 	private static Sqlite_Utils instance=null;
 	private static OnUpgrade onUpgrade=null;
 	private static OnCreate onCreate=null;
 	private static boolean printLog=false;
-	
+	private SQLiteDatabase tranSQLiteDatabase=null;
+	/**
+	 * 
+	 * @param context 只是不同的 SQLiteOpenHelper 但是一个应用就是一个数据库
+	 */
 	private  Sqlite_Utils(Context context) {
-		helper=new Sqlite_Helper(DB_NAME, context, 9);
+		helper=new Sqlite_Helper(DB_NAME, context,1);
 	}
 	/**
 	 * 只要注册监听   就会 创建表  和监听版本切换 
@@ -56,17 +57,53 @@ public class Sqlite_Utils {
 	private static  void onUpgrade(Context context, Sqlite_Utils instance2){
 		int oldVersion=SharedUtils.getInstance(context).readSp().getInt(SHARE_TAG, 0);
 		SharedUtils.getInstance(context).writeSp().putInt(SHARE_TAG, version).commit();
-		if(oldVersion!=version)
+		if(oldVersion!=version&&oldVersion!=0)
 			onUpgrade.onUpgrade(oldVersion, version,instance2);
 	}
 	public  interface OnUpgrade{
+		/**
+		 * TODO  这里是 每次升级的时候   所有实体类自动 在数据库中 变换
+		 * @param oldVersion
+		 * @param newVersion
+		 * @param instance2
+		 */
 		public  void onUpgrade(int oldVersion, int newVersion, Sqlite_Utils instance2);
 	}
 	public  interface OnCreate{
+		/**
+		 * TODO 每次initListener的时候  建立表 不管表内部的变换
+		 * @param instance
+		 */
 		public  void onCreateTable(Sqlite_Utils instance);
 	}
+	public void workWithTran(Work work) {
+		try {
+			if(work==null)
+				throw new IllegalArgumentException("work may be null");
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+		tranSQLiteDatabase = helper.getWritableDatabase();
+		helper.setTran(false);
+		tranSQLiteDatabase.beginTransaction();
+		try {
+			work.work();
+			tranSQLiteDatabase.setTransactionSuccessful();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			// 结束事务
+			tranSQLiteDatabase.endTransaction();
+			tranSQLiteDatabase.close();
+			helper.setTran(true);
+			tranSQLiteDatabase=null;
+		}
+	}
+	public interface Work{
+		public abstract void work();
+	}
 	/**
-	 * 必须先添加注册个 更改监听后  才能 初始化
+	 * 经证明 context 公用一个数据库  Sqlite_Utils 也是一个因为我用的是单例模式
 	 * @param activity
 	 * @return
 	 */
@@ -78,12 +115,20 @@ public class Sqlite_Utils {
 		}
 		return instance;
 	}
+	private SQLiteDatabase getTranDatabase(){
+		if (tranSQLiteDatabase != null) {
+			return tranSQLiteDatabase;
+		} else {
+			return helper.getWritableDatabase();
+		}
+	}
+	
 	/**
 	 * @param t
 	 * @return
 	 */
 	public  <T> String[] queryColumnNamesByEntity(Class<T> t){
-		String[] columns=helper.getColumnNames(t);
+		String[] columns=helper.getColumnNames(t,getTranDatabase());
 		if (printLog) {
 			StringBuilder sb = new StringBuilder(100);
 			sb.append("TableName:" + AnUtils.getTableAnnoName(t) + "\t{");
@@ -109,8 +154,7 @@ public class Sqlite_Utils {
 	 */
 	public <T> List<T> queryEntitysByCondition(Class<T> t,String whereStr,String[] markStrArr){
 		String sql="select * from "+ AnUtils.getTableAnnoName(t) +" "+AnUtils.replaceByAnnoColumn(whereStr, t);
-//		String sql="select * from "+ AnUtils.getTableAnnoName(t) +" "+whereStr;
-		List<T> list = helper.queryToEntity(t, sql, markStrArr, true);
+		List<T> list = helper.queryToEntity(t, sql, markStrArr, true,getTranDatabase());
 		if (printLog) {
 			System.out.println("sql:"+sql);
 			for (T t2 : list) {
@@ -126,7 +170,7 @@ public class Sqlite_Utils {
 	 */
 	public <T> T queryEntityById(Class<T> t,String id){
 		String sql="select * from "+AnUtils.getTableAnnoName(t)+" where id=?";
-		List<T> list = helper.queryToEntity(t, sql, new String[]{id}, true);
+		List<T> list = helper.queryToEntity(t, sql, new String[]{id}, true,getTranDatabase());
 		if(list.size()>1){
 			try {
 				throw new IllegalStateException("id have same is not possible!");
@@ -150,7 +194,7 @@ public class Sqlite_Utils {
 	 */
 	public <T> List<T> queryAllByClass(Class<T> t){
 		String sql="select * from "+AnUtils.getTableAnnoName(t);
-		List<T> list = helper.queryToEntity(t, sql, new String[]{}, true);
+		List<T> list = helper.queryToEntity(t, sql, new String[]{}, true,getTranDatabase());
 		if (printLog) {
 			System.out.println("sql:"+sql);
 			for (T t2 : list) {
@@ -219,10 +263,10 @@ public class Sqlite_Utils {
 			if(!"id".equals(field.getName())){
 				field.setAccessible(true);
 				if (i==0) {
-					columnSb.append(AnUtils.getAnnoColumnStrByField(field, t.getClass()));
+					columnSb.append(AnUtils.getAnnoColumn_Name_ByField(field, t.getClass()));
 					markSb.append("?");
 				}else{
-					columnSb.append(","+AnUtils.getAnnoColumnStrByField(field, t.getClass()));
+					columnSb.append(","+AnUtils.getAnnoColumn_Name_ByField(field, t.getClass()));
 					markSb.append(",?");
 				}
 				i++;
@@ -243,7 +287,7 @@ public class Sqlite_Utils {
 			System.out.println("sql:" + sql);
 		}
 		Object[] object=columeValue.toArray();
-		helper.Operating(sql, object);
+		helper.Operating(sql, object,getTranDatabase());
 	}
 	/**
 	 * @param t
@@ -266,9 +310,9 @@ public class Sqlite_Utils {
 			if(!"id".equals(field.getName())){
 				field.setAccessible(true);
 				if (i==0) 
-					sb.append(AnUtils.getAnnoColumnStrByField(field, t.getClass())+"=?");
+					sb.append(AnUtils.getAnnoColumn_Name_ByField(field, t.getClass())+"=?");
 				else
-					sb.append(","+AnUtils.getAnnoColumnStrByField(field, t.getClass())+"=?");
+					sb.append(","+AnUtils.getAnnoColumn_Name_ByField(field, t.getClass())+"=?");
 				i++;
 				try {
 					columeValue.add((String) field.get(t));
@@ -296,7 +340,7 @@ public class Sqlite_Utils {
 			System.out.println("sql:" + sql);
 		}
 		Object[] object=columeValue.toArray();
-		helper.Operating(sql, object);
+		helper.Operating(sql, object,getTranDatabase());
 	}
 	/**
 	 *  " set name = ?,sex=?  where _id = ?;";
@@ -315,7 +359,7 @@ public class Sqlite_Utils {
 		if (printLog) {
 			System.out.println("sql:" + sql);
 		}
-		helper.Operating(sql,markStrArr);
+		helper.Operating(sql,markStrArr,getTranDatabase());
 	}
 	public <T> void removeEntity(T t){
 //		 SQLiteDatabase db = helper.getWritableDatabase();
@@ -348,7 +392,7 @@ public class Sqlite_Utils {
 			System.out.println("sql:" + sql);
 		}
 		Object[] markStrArr=new Object[]{id};
-		helper.Operating(sql, markStrArr);
+		helper.Operating(sql, markStrArr,getTranDatabase());
 	}
 
 	public <T> void removeEntityByCondition(Class<T> t,String whereStr,String[] markStrArr){
@@ -356,14 +400,14 @@ public class Sqlite_Utils {
 		if (printLog) {
 			System.out.println("sql:" + sql);
 		}
-		helper.Operating(sql, markStrArr);
+		helper.Operating(sql, markStrArr,getTranDatabase());
 	}
 	public <T> void removeAllByClass(Class<T> t){
 		String sql="delete  from "+AnUtils.getTableAnnoName(t)+" ";
 		if (printLog) {
 			System.out.println("sql:" + sql);
 		}
-		helper.Operating(sql,new Object[]{});
+		helper.Operating(sql,new Object[]{},getTranDatabase());
 	}
 
 	public <T> void dropTableByClass(Class<T> t){
@@ -377,14 +421,20 @@ public class Sqlite_Utils {
 		if (printLog) {
 			System.out.println("sql:" + sql);
 		}
-		helper.Operating(sql,new Object[]{});
+		helper.Operating(sql,new Object[]{},getTranDatabase());
 	}
 	//TODO 通过包生成   未实现
 	public  <T> void createTableByEntity(Class<T> t){
-		helper.createTableByEntity(t);
+		helper.createTableByEntity(t,getTranDatabase());
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public  <T> void createTableByList(List<Class> classList){
+		for (Class class1 : classList) {
+			helper.createTableByEntity(class1,getTranDatabase());
+		}
 	}
 	public <T> void addColumn(Class<T> t,String willAddColumnStr){
-		helper.addColumn(t, willAddColumnStr);
+		helper.addColumn(t, willAddColumnStr,getTranDatabase());
 	}
 	/**
 	 * 
@@ -393,206 +443,18 @@ public class Sqlite_Utils {
 	 * @param column_target   如果 name 想删除 sex想改变成 hex 那就new String[]{"","hex"}
 	 */
 	public <T> void updateOrDeleteColumn(Class<T> t,String[] column_old,String[] column_target) {
-		helper.column_updateOrDelete(t, column_old, column_target);
+//		helper.column_updateOrDelete(t, column_old, column_target,getTranDatabase());
 	}
-	/**
-	 * 不是单利模式
-	 * @return
-	 */
-	public Transaction getTransaction(){
-		return new Transaction();
-	}
-	public  class Transaction{
-		private SQLiteDatabase db=null;
-		private boolean transactionIsSuccess=true;
-		
-		public void beginTransaction(){
-			db=helper.getWritableDatabase();
-			db.beginTransaction();  
-		}
-		public void endTransaction(){
-			if (transactionIsSuccess) {
-				db.setTransactionSuccessful();
-			}
-			db.endTransaction();
-			db.close();
-		}
-		public <T> void removeEntityByCondition_Transaction(Class<T> t,String whereStr,String[] markStrArr){
-			String sql="delete  from "+t.getSimpleName()+" "+whereStr;
-			if(!helper.Operating_Transaction(sql, markStrArr,db))
-			transactionIsSuccess=false;
-		}
-		public <T> void removeAllByClass_Transaction(Class<T> t){
-			String sql="delete  from "+t.getSimpleName()+" ";
-			if(!helper.Operating_Transaction(sql,new Object[]{},db))
-				transactionIsSuccess=false;
-		}
-		public <T> void addOrUpdateEntity(T t){
-			String id=null;
-			try {
-				Field idField = t.getClass().getDeclaredField("id");
-				idField.setAccessible(true);
-				id=(String) idField.get(t);
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-			if(id==null){
-				//添加操作
-				addEntity_Transaction(t);
-			}else{
-				//看看ID重复没 
-				String sql="select * from "+t.getClass().getSimpleName()+" where id=?";
-				int count = helper.queryCountById(sql, new String[]{id}, true);
-				if(count==0){
-					//不重复就添加
-					addEntity_Transaction(t);
-				}else{
-					//重复就修改
-					UpdateEntity_Transaction(t);
-				}
-			}
-		
-		}
-		public <T> void addEntity_Transaction(T t){
-					// String
-					// sql="insert into "+MyParameters.TABLE_NAME+"(name, sex) values(?,?)";
-					// db.execSQL(sql, new Object[]{person.getName(),person.getSex()});
-					// db.execSQL(sql, object);
-					// db.close();
-			StringBuilder sb=new StringBuilder(50);
-			sb.append("insert into ");
-			sb.append(t.getClass().getSimpleName()+" ");
-			Field[] fields = t.getClass().getDeclaredFields();
-			StringBuilder columnSb=new StringBuilder(50);
-			StringBuilder markSb=new StringBuilder(50);
-			columnSb.append("(");
-			markSb.append("(");
-			int i=0;
-			List<Object> columeValue=new ArrayList<Object>();
-			//TODO 当字段有问题 是一个类呢  未作
-			for (Field field : fields) {
-				if(!"id".equals(field.getName())){
-					field.setAccessible(true);
-					if (i==0) {
-						columnSb.append(field.getName());
-						markSb.append("?");
-					}else{
-						columnSb.append(","+field.getName());
-						markSb.append(",?");
-					}
-					i++;
-					try {
-						columeValue.add((String) field.get(t));
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			columnSb.append(")");
-			markSb.append(")");
-			sb.append(columnSb.toString()+" values "+markSb.toString());
-			String sql=sb.toString();
-			Object[] object=columeValue.toArray();
-			if(!helper.Operating_Transaction(sql, object,db))
-				transactionIsSuccess=false;
-		}
-		public <T> void UpdateEntity_Transaction(T t){
-			// SQLiteDatabase db = helper.getWritableDatabase();
-			// String sql = "update " + MyParameters.TABLE_NAME
-			// + " set name = ?,sex=?  where _id = ?;";
-			// db.execSQL(sql, new Object[] { person.getName(), person.getSex(), id
-			// });
-			// db.close();
-			StringBuilder sb=new StringBuilder(50);
-			sb.append("update ");
-			sb.append(t.getClass().getSimpleName()+" set ");
-			Field[] fields = t.getClass().getDeclaredFields();
-			int i=0;
-			List<Object> columeValue=new ArrayList<Object>();
-			//TODO 当字段有问题 是一个类呢  未作
-			for (Field field : fields) {
-				if(!"id".equals(field.getName())){
-					field.setAccessible(true);
-					if (i==0) 
-					sb.append(field.getName()+"=?");
-					else
-					sb.append(","+field.getName()+"=?");
-					i++;
-					try {
-						columeValue.add((String) field.get(t));
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			sb.append(" where id=? ");
-			try {
-				Field idField = t.getClass().getDeclaredField("id");
-				idField.setAccessible(true);
-				columeValue.add(idField.get(t));
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-			String sql=sb.toString();
-			Object[] object=columeValue.toArray();
-			if(!helper.Operating_Transaction(sql, object,db))
-				transactionIsSuccess=false;
-		}
-		public <T> void UpdateByCondition_Transaction(Class<T> t,String Set_Where_Str,String[] markStrArr){
-			// SQLiteDatabase db = helper.getWritableDatabase();
-					// String sql = "update " + MyParameters.TABLE_NAME
-					// + " set name = ?,sex=?  where _id = ?;";
-					// db.execSQL(sql, new Object[] { person.getName(), person.getSex(), id
-					// });
-					// db.close();
-			
-			String sql="update   "+t.getSimpleName()+" "+Set_Where_Str;
-			transactionIsSuccess=helper.Operating_Transaction(sql,markStrArr,db);
-		}
-		public <T> void removeEntity_Transaction(T t){
-		//		 SQLiteDatabase db = helper.getWritableDatabase();
-				// String sql = "delete  from " + MyParameters.TABLE_NAME
-				// + " where  _id=? ";
-				// db.execSQL(sql, new Object[] { id });
-				// db.close();	
-				Object id = null;
-				try {
-					Field idField = t.getClass().getDeclaredField("id");
-					idField.setAccessible(true);
-					id=idField.get(t);
-				} catch (NoSuchFieldException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				}
-				if(id==null)
-					throw new IllegalArgumentException("id may be null");
-				String whereStr=" where id=? ";
-				String sql="delete  from "+t.getClass().getSimpleName()+" "+whereStr;
-				Object[] markStrArr=new Object[]{id};
-				if(!helper.Operating_Transaction(sql, markStrArr,db))
-					transactionIsSuccess=false;
-			}
-	}
-
 	public static boolean getPrintLog(){
 		return printLog;
 	}
 	public static void setPrintLog(boolean printLog){
 		Sqlite_Utils.printLog=printLog;
+	}
+	public static int getVersion() {
+		return version;
+	}
+	public static void setVersion(int version) {
+		Sqlite_Utils.version = version;
 	}
 }

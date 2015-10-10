@@ -1,4 +1,4 @@
-/gen/
-/bin/
-/proguard-project.txt
 /project.properties
+/gen/
+/proguard-project.txt
+/bin/
