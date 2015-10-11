@@ -52,7 +52,7 @@ public class JsonTest {
 		 */
 		String packageName="json.EntityTest";
 		String firstClassName="Root";
-		String outSavePath="D:/JSONtest";
+		String outSavePath="/";
 		
 		List<OutPutEntity> outList=new ArrayList<OutPutEntity>();
 		File f = new File("D:/json.txt");

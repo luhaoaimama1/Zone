@@ -15,7 +15,7 @@ public final class R {
 		public static final int ic_launcher = 0x7f020017;
 	}
 	public static final class id {
-		public static final int action_settings = 0x7f09006c;
+		public static final int action_settings = 0x7f09006d;
 	}
 	public static final class layout {
 		public static final int activity_main = 0x7f030015;

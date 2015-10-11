@@ -60,21 +60,26 @@ public class Apps extends Application{
 	 */
 	private void configureSqlit() {
 		Sqlite_Utils.setPrintLog(false);
-		Sqlite_Utils.init_listener(Apps.this,new OnCreate() {
+		Sqlite_Utils.init_listener(Apps.this, new OnCreate() {
 			@Override
 			public void onCreateTable(Sqlite_Utils instance) {
 				instance.createTableByEntity(User.class);
 			}
-		},new OnUpgrade() {
+		}, new OnUpgrade() {
+			@Override
+			public void annoColumn_DeleOrUpdate(Sqlite_Utils instance2) {
+
+			}
+
 			@Override
 			public void onUpgrade(int oldVersion, int newVersion,
 					Sqlite_Utils instance2) {
-//				System.err.println("oldVersion:" + oldVersion);
-//				System.err.println("newVersion:" + newVersion);
-//				instance2.dropTableByClass(DbEntity.class);
-				
+				// System.err.println("oldVersion:" + oldVersion);
+				// System.err.println("newVersion:" + newVersion);
+				// instance2.dropTableByClass(DbEntity.class);
+
 			}
-		});		
+		});	
 	}
 	/**
 	 * 记录打开次数

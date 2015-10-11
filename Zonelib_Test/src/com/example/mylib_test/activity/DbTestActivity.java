@@ -3,6 +3,7 @@ package com.example.mylib_test.activity;
 import java.util.List;
 import Android.Zone.Sqlite.Sqlite_Utils;
 import Android.Zone.Sqlite.Sqlite_Utils.Work;
+import Android.Zone.Sqlite.TableEntity.TableEntity;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -67,6 +68,9 @@ public class DbTestActivity extends Activity implements OnClickListener{
 			Sqlite_Utils.getInstance(this).queryAllByClass(DbEntity.class);
 //			Sqlite_Utils.getInstance(this).queryEntityById(DbEntity.class,"1");
 			break;
+		case R.id.db_queryInner:
+			Sqlite_Utils.getInstance(this).queryAllByClass(TableEntity.class);
+			break;
 		case R.id.db_queryByC:
 			List<DbEntity> temp = Sqlite_Utils.getInstance(this).queryEntitysByCondition(DbEntity.class, "where _id_ in(?,?)", new String[]{"1","3"});
 			break;
@@ -78,8 +82,10 @@ public class DbTestActivity extends Activity implements OnClickListener{
 	private void onClickAdd(View v, DbEntity zeng) {
 		switch (v.getId()) {
 		case R.id.db_add:
-//			Sqlite_Utils.getInstance(MainActivity.this).addColumn(DbEntity.class, "sbshibu");
 			Sqlite_Utils.getInstance(this).addEntity(zeng);
+			break;
+		case R.id.db_addColumn:
+			Sqlite_Utils.getInstance(this).addColumn(DbEntity.class, "sbshibu","1000");
 			break;
 		case R.id.db_addOrUpdateEntity:
 			Sqlite_Utils.getInstance(this).addOrUpdateEntity(zeng);

@@ -144,6 +144,13 @@
         android:onClick="onClick"
         android:text="db查询" />
     <Button
+        android:id="@+id/db_queryInner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:onClick="onClick"
+        android:text="db查询内部表" />
+    <Button
         android:id="@+id/db_queryByC"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

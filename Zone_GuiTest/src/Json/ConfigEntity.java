@@ -3,16 +3,15 @@ package Json;
 public class ConfigEntity {
 	private String packageName;
 	private String firstClassName;
-	private String outSavePath;
+//	private String outSavePath;
 
 	public ConfigEntity() {
 	}
 
-	public ConfigEntity(String packageName, String firstClassName,
-			String outSavePath) {
+	public ConfigEntity(String packageName, String firstClassName) {
 		this.packageName = packageName;
 		this.firstClassName = firstClassName;
-		this.outSavePath = outSavePath;
+//		this.outSavePath = outSavePath;
 	}
 
 	public String getPackageName() {
@@ -31,12 +30,12 @@ public class ConfigEntity {
 		this.firstClassName = firstClassName;
 	}
 
-	public String getOutSavePath() {
-		return outSavePath;
-	}
-
-	public void setOutSavePath(String outSavePath) {
-		this.outSavePath = outSavePath;
-	}
+//	public String getOutSavePath() {
+//		return outSavePath;
+//	}
+//
+//	public void setOutSavePath(String outSavePath) {
+//		this.outSavePath = outSavePath;
+//	}
 
 }

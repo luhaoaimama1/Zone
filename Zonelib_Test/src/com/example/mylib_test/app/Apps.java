@@ -40,7 +40,7 @@ public class Apps extends Application {
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectAll().penaltyDeath().build());
 		}
 		//初始化 sqlite
-		Sqlite_Utils.setVersion(2);
+		Sqlite_Utils.setVersion(4);
 		SqliteConfig.initSqlite(this);
 		su=Sqlite_Utils.getInstance(this);
 		//初始化ImageLoader

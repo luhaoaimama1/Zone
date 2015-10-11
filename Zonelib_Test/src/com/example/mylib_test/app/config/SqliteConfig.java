@@ -32,6 +32,12 @@ public class SqliteConfig {
 					Sqlite_Utils instance2) {
 				System.err.println("oldVersion:" + oldVersion);
 				System.err.println("newVersion:" + newVersion);
+				 instance2.updateLengthOrAddColumn_Auto(DbEntity.class);
+			
+			}
+			@Override
+			public void annoColumn_DeleOrUpdate(Sqlite_Utils instance2) {
+				instance2.updateAnnoColumn(DbEntity.class, "danteng", "");
 			}
 		});
 	}

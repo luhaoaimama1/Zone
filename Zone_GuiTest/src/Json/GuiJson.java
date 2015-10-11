@@ -1,14 +1,9 @@
 package Json;
 import java.awt.EventQueue;
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-
 import com.google.gson.Gson;
-
 import java.awt.Button;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -18,6 +13,7 @@ import java.awt.Label;
 import java.io.File;
 
 
+@SuppressWarnings("serial")
 public class GuiJson extends JFrame {
 	public enum Statue{
 		PACKAGENAME,FIRSTCLASSNAME,OUTSAVEPATH,JSON_EMPTY,JSON_ERROR,OK
@@ -26,12 +22,11 @@ public class GuiJson extends JFrame {
 	private JPanel contentPane;
 	private TextField packageName;
 	private TextField firstClassName;
-	private TextField outSavePath;
 	private TextArea jsonStr;
 	private Statue temp;
-	private static final File CONFIG_FILE=new File("Config.txt");
+	private  File CONFIG_FILE=null;
 	private  Gson gson=new Gson();
-	private String savePath_Real="";
+	private File fileFolder_Save;
 
 	/**
 	 * Launch the application.
@@ -65,17 +60,12 @@ public class GuiJson extends JFrame {
 		contentPane.add(jsonStr);
 		
 		Label label = new Label("包名:");
-		label.setBounds(10, 22, 33, 23);
+		label.setBounds(28, 22, 33, 23);
 		contentPane.add(label);
 		
 		Label label_1 = new Label("最顶层类名:");
-		label_1.setBounds(166, 22, 69, 23);
+		label_1.setBounds(293, 22, 69, 23);
 		contentPane.add(label_1);
-		
-		
-		Label label_2 = new Label("输出路径:");
-		label_2.setBounds(362, 22, 56, 23);
-		contentPane.add(label_2);
 		
 		Label label_3 = new Label("作者: Zone ");
 		label_3.setBounds(218, 426, 69, 23);
@@ -86,24 +76,32 @@ public class GuiJson extends JFrame {
 		contentPane.add(label_4);
 
 		packageName = new TextField();
-		packageName.setBounds(54, 22, 106, 23);
+		packageName.setBounds(67, 22, 195, 23);
 		contentPane.add(packageName);
 		
 		firstClassName = new TextField();
-		firstClassName.setBounds(241, 22, 116, 23);
+		firstClassName.setBounds(368, 22, 222, 23);
 		contentPane.add(firstClassName);
-		
-		outSavePath = new TextField();
-		outSavePath.setBounds(424, 22, 160, 23);
-		contentPane.add(outSavePath);
 	
+		fileFolder_Save = new File("savePath");
+		if(!fileFolder_Save.exists()){
+			fileFolder_Save.mkdir();
+		}
+		CONFIG_FILE=new File("Config.txt");
+		System.out.println("包名:"+packageName.getText().toString());
+		System.out.println("最顶层类名:"+firstClassName.getText().toString());
+		
 		readConfig();
 		Button button = new Button("生成");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("包名:"+packageName.getText().toString());
-				System.out.println("最顶层类名:"+firstClassName.getText().toString());
-				System.out.println("输出路径:"+outSavePath.getText().toString());
+				//每次生成的时候把  保存文件夹内部的 文件清空了
+				File[] files = fileFolder_Save.listFiles();
+				for (File file : files) {
+					if(file.exists()){
+						file.delete();
+					}
+				}
 				if("".equals(packageName.getText().toString().trim())){
 					temp=Statue.PACKAGENAME;
 					new Dialog(temp).setVisible(true);
@@ -114,22 +112,13 @@ public class GuiJson extends JFrame {
 					new Dialog(temp).setVisible(true);
 					return ;
 				}
-				savePath_Real=outSavePath.getText().toString().trim().replace("\\", "/");
-				if("".equals(savePath_Real)){
-					temp=Statue.OUTSAVEPATH;
-					new Dialog(temp).setVisible(true);
-					return ;
-				}
-				
 				if("".equals(jsonStr.getText().toString().trim())){
 					temp=Statue.JSON_EMPTY;
 					new Dialog(temp).setVisible(true);
 					return ;
 				}
-				
-				
-				JsonTest.generateFile(packageName.getText().toString(), firstClassName.getText().toString(), savePath_Real, jsonStr.getText().toString(),new JsonExceptionListener() {
-					
+				final String temp_savePath = fileFolder_Save.getAbsolutePath();
+				JsonTest.generateFile(packageName.getText().toString(), firstClassName.getText().toString(), fileFolder_Save.getAbsolutePath(), jsonStr.getText().toString(),new JsonExceptionListener() {
 					@Override
 					public void errMsg(String msg) {
 						temp=Statue.JSON_ERROR;
@@ -138,10 +127,10 @@ public class GuiJson extends JFrame {
 
 					@Override
 					public void successMsg() {
-						ConfigEntity configEntity = new ConfigEntity(packageName.getText().toString().trim(), firstClassName.getText().toString().trim(), outSavePath.getText().toString().trim());
+						ConfigEntity configEntity = new ConfigEntity(packageName.getText().toString().trim(), firstClassName.getText().toString().trim());
 						String jsonConfig = gson.toJson(configEntity);
 						IOUtils.write(CONFIG_FILE, jsonConfig, "gbk");	
-						IOUtils.openFolder(savePath_Real);
+						IOUtils.openFolder(temp_savePath);
 					}
 				});
 				
@@ -157,7 +146,6 @@ public class GuiJson extends JFrame {
 			ConfigEntity tempConfigEntity = gson.fromJson(tempFile, ConfigEntity.class);
 			 packageName.setText(tempConfigEntity.getPackageName());;
 			 firstClassName.setText(tempConfigEntity.getFirstClassName());
-			 outSavePath.setText(tempConfigEntity.getOutSavePath());
 		}
 	}
 }

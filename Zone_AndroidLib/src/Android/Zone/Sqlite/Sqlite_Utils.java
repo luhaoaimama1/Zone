@@ -2,17 +2,27 @@ package Android.Zone.Sqlite;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import com.google.gson.Gson;
+import Android.Zone.Sqlite.Sqlite_Helper.AddColumnStatue;
 import Android.Zone.Sqlite.Annotation.utils.AnUtils;
+import Android.Zone.Sqlite.GsonEntity.GsonColumn;
+import Android.Zone.Sqlite.GsonEntity.GsonTop;
+import Android.Zone.Sqlite.Inner.OperateStatueEntity;
+import Android.Zone.Sqlite.Inner.OperateStatueEntity.OperateStatue;
+import Android.Zone.Sqlite.Inner.UpdateColumn;
+import Android.Zone.Sqlite.TableEntity.TableEntity;
 import Android.Zone.Utils.SharedUtils;
 import Java.Zone.Log.PrintUtils;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 //TODO 实体类id字段的设计   实体类中包含实体类的操作
 /**
- * 想要测试注解 就需要注解和字段完全不一样 然后打印每个方法里的sql看看对不对就OK了
- * 
- * 因为此工具通过反射做的 所以 set get 和参数都是系统生成的那种 如果不是会报错
+ * TableEntity.class  是数据库  维护表信息的表 每次自动更改和添加字段 都是重这里对比的
+ * 如果你一些字段不小心删除 并且忘记了 可以在这里查到  如果想真正删除数据库中的
+ * 字段必须用特殊方法
+ *   
  * 必须有id  暂时支持String
  * 实体中包含实体 未实现  
  * 通过字段更改更改表未实现  
@@ -47,6 +57,7 @@ public class Sqlite_Utils {
 		Sqlite_Utils.onCreate=onCreate;
 		Sqlite_Utils.getInstance(context);
 		if(instance!=null){
+			instance.createTableByEntity(TableEntity.class);
 			onCreate.onCreateTable(instance);	
 			onUpgrade(context,instance);
 		}
@@ -57,21 +68,29 @@ public class Sqlite_Utils {
 	private static  void onUpgrade(Context context, Sqlite_Utils instance2){
 		int oldVersion=SharedUtils.getInstance(context).readSp().getInt(SHARE_TAG, 0);
 		SharedUtils.getInstance(context).writeSp().putInt(SHARE_TAG, version).commit();
-		if(oldVersion!=version&&oldVersion!=0)
+		if(oldVersion!=version&&oldVersion!=0){
+			//自动检测 添加字段 或者 修改长度  后才能注解字段删除和修改
 			onUpgrade.onUpgrade(oldVersion, version,instance2);
+			onUpgrade.annoColumn_DeleOrUpdate(instance2);
+		}
 	}
 	public  interface OnUpgrade{
 		/**
-		 * TODO  这里是 每次升级的时候   所有实体类自动 在数据库中 变换
+		 * 这个 仅仅是 自动检测 主要是监控类 的添加字段 和长度修改
 		 * @param oldVersion
 		 * @param newVersion
 		 * @param instance2
 		 */
 		public  void onUpgrade(int oldVersion, int newVersion, Sqlite_Utils instance2);
+		/**
+		 * 主要是  对注解的修改 和 删除 
+		 * @param instance2
+		 */
+		public  void annoColumn_DeleOrUpdate(Sqlite_Utils instance2);
 	}
 	public  interface OnCreate{
 		/**
-		 * TODO 每次initListener的时候  建立表 不管表内部的变换
+		 * 自动建表：不监控表内的变化 仅仅没有创建表 
 		 * @param instance
 		 */
 		public  void onCreateTable(Sqlite_Utils instance);
@@ -421,29 +440,201 @@ public class Sqlite_Utils {
 		if (printLog) {
 			System.out.println("sql:" + sql);
 		}
-		helper.Operating(sql,new Object[]{},getTranDatabase());
+		boolean success = helper.Operating(sql,new Object[]{},getTranDatabase());
+		if(success){
+			removeEntityByCondition(TableEntity.class, "where _tableName_ = ?", 
+					new String[]{AnUtils.getTableAnnoName(t)});	
+		}
+
 	}
-	//TODO 通过包生成   未实现
 	public  <T> void createTableByEntity(Class<T> t){
-		helper.createTableByEntity(t,getTranDatabase());
+		boolean suceess = helper.createTableByEntity(t, getTranDatabase());
+		if (printLog) {
+			System.out.println("表：" + AnUtils.getTableAnnoName(t) + "\t　创建陈功了吗"+ suceess);
+		}
+		if (suceess) {
+			if(!t.getName().equals(TableEntity.class.getName())){
+				//创建表成功
+				TableEntity entity=new TableEntity();
+				entity.setTableName(AnUtils.getTableAnnoName(t));
+				//gson 存值的
+				entity.setColumnProperty(AnUtils.getGsonStr(t));
+				//记录下来
+				addEntity(entity);
+			}
+		}
 	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public  <T> void createTableByList(List<Class> classList){
 		for (Class class1 : classList) {
-			helper.createTableByEntity(class1,getTranDatabase());
+			createTableByEntity(class1);
 		}
 	}
-	public <T> void addColumn(Class<T> t,String willAddColumnStr){
-		helper.addColumn(t, willAddColumnStr,"1000",getTranDatabase());
+	public <T> void addColumn(Class<T> t,String willAddColumnStr,String length){
+		AddColumnStatue temp = helper.addColumn(t, willAddColumnStr,length,getTranDatabase());
+		if(temp==AddColumnStatue.Success){
+			//1.取出来  
+			List<TableEntity> tempEntity= (List<TableEntity>) queryEntitysByCondition(TableEntity.class, "where _tableName_ = ?", 
+						new String[]{AnUtils.getTableAnnoName(t)});
+			//2.添加一个
+			if(tempEntity.size()>0){
+				TableEntity  finalTable=tempEntity.get(0);
+				if(finalTable!=null){
+					Gson gson=new Gson();
+					GsonTop gsonTop = gson.fromJson(tempEntity.get(0).getColumnProperty(), GsonTop.class);
+					gsonTop.getData().add(new GsonColumn(willAddColumnStr,length));
+					String gsonTopStr = gson.toJson(gsonTop);
+					finalTable.setColumnProperty(gsonTopStr);
+				}
+				//3.然后修改了
+				UpdateEntity(finalTable);
+			}
+		}
 	}
-	/**
-	 * 
-	 * @param t	
-	 * @param column_old  id不要变  别的 例如要改变 字段 name sex那就new String[]{"name","sex"}
-	 * @param column_target   如果 name 想删除 sex想改变成 hex 那就new String[]{"","hex"}
-	 */
-	public <T> void updateOrDeleteColumn(Class<T> t) {
-//		helper.column_updateOrDelete(t, column_old, column_target,getTranDatabase());
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public <T> void updateLengthOrAddColumn_AutoByList(List<Class> classList) {
+		for (Class class1 : classList) {
+			updateLengthOrAddColumn_Auto(class1);
+		}
+	}
+	public <T> void updateLengthOrAddColumn_Auto(Class<T> t) {
+		//1.取出来  
+		List<TableEntity> tempEntity= (List<TableEntity>) queryEntitysByCondition(TableEntity.class, "where _tableName_ = ?", 
+					new String[]{AnUtils.getTableAnnoName(t)});
+		//2.添加一个
+		if(tempEntity.size()>0){
+			TableEntity  finalTable=tempEntity.get(0);
+			Gson gson=new Gson();
+			GsonTop gsonTop = gson.fromJson(tempEntity.get(0).getColumnProperty(), GsonTop.class);
+			//数据库中存的 字段
+			List<GsonColumn> dbList = gsonTop.getData();
+			List<GsonColumn> noUpdateList =new ArrayList<GsonColumn>();
+			for (GsonColumn item : dbList) {
+				noUpdateList.add(item);
+			}
+			//当前类的 所有字段
+			List<GsonColumn> nowList=new ArrayList<GsonColumn>();
+			Field[] fields = t.getDeclaredFields();
+			for (Field item : fields) {
+				nowList.add(new GsonColumn(AnUtils.getAnnoColumn_Name_ByField(item, t), 
+						AnUtils.getAnnoColumn_Length_ByField(item, t)));
+			}
+			List<OperateStatueEntity> operateList=new ArrayList<OperateStatueEntity>();
+			for (GsonColumn nowItem : nowList) {
+				boolean have=false;
+				for (GsonColumn dbItem : dbList) {
+					if(nowItem.getName().equals(dbItem.getName())){
+						//如果有  
+						have=true;	
+						if(!nowItem.getLength().equals(dbItem.getLength())){
+							//如果长度不想等 那么修改  如果相等那么不管
+							operateList.add(new OperateStatueEntity(OperateStatue.Length, nowItem.getName(), nowItem.getLength()));
+//							  即 数据库中的字段-变化的  +add的
+							noUpdateList.remove(dbItem);
+						}
+					}
+				}
+				if(!have){
+					//数据库总没有 那么添加
+					operateList.add(new OperateStatueEntity(OperateStatue.Add, nowItem.getName(), nowItem.getLength()));
+//					  即 数据库中的字段-变化的  +add的
+					noUpdateList.add(nowItem);
+				}
+			}
+//			3.把所有将要操作的 操作了
+			List<UpdateColumn> updateColumnList=new ArrayList<UpdateColumn>();
+			boolean ZoneTable_Add=false;
+			for (OperateStatueEntity item : operateList) {
+				switch (item.statue) {
+				case Add:
+					//方法里面自己带 添加内部表ZoneTable 字段了
+					addColumn(t, item.name, item.length);
+					ZoneTable_Add=true;
+					break;
+				case Length:
+					//因为我只是修改长度  所以两个是相同的
+					updateColumnList.add(new UpdateColumn(item.name, item.name, item.length));
+					break;
+
+				default:
+					break;
+				}
+			}
+			if(updateColumnList.size()>0){
+				//修改是一起修改了 需要不变的字段  即 数据库中的字段-变化的  +add的
+				boolean success = helper.column_updateOrDelete(t,noUpdateList, updateColumnList, getTranDatabase());
+				if(success){
+					//ZoneTable 字段更改了  为什么在查一边呢 因为 那个 add字段的时候 已经把数据更改了  所以要加判断提高效率
+					if(ZoneTable_Add){
+						tempEntity= (List<TableEntity>) queryEntitysByCondition(TableEntity.class, "where _tableName_ = ?", 
+								new String[]{AnUtils.getTableAnnoName(t)});
+						if(tempEntity.size()>0){
+							finalTable=tempEntity.get(0);
+							//这个就是最新的
+							gsonTop = gson.fromJson(tempEntity.get(0).getColumnProperty(), GsonTop.class);
+						}
+					}
+//					给gsonTop 实体 弄成修改后的实体
+					for (UpdateColumn updateColumn : updateColumnList) {
+						for (GsonColumn topItem : gsonTop.getData()) {
+							if(topItem.getName().equals(updateColumn.column_old)){
+								topItem.setLength(updateColumn.targetLength);
+							}
+						}
+					}
+					String gsonTopStr = gson.toJson(gsonTop);
+					finalTable.setColumnProperty(gsonTopStr);
+					//3.然后修改了
+					UpdateEntity(finalTable);
+				}
+			}
+		}
+	}
+	public <T> void deleteAnnoColumn(Class<T> t,String annoName){
+		updateAnnoColumn(t, annoName, "");
+	}
+	public <T> void updateAnnoColumn(Class<T> t,String annoName,String newName){
+		if(("").equals(annoName.trim())){
+			throw new IllegalArgumentException("annoName may be ''!");
+		}
+		
+		List<TableEntity> tempEntity = (List<TableEntity>) queryEntitysByCondition(TableEntity.class, "where _tableName_ = ?", 
+				new String[]{AnUtils.getTableAnnoName(t)});
+		Gson gson=new Gson();
+		if(tempEntity.size()>0){
+			TableEntity finalTable = tempEntity.get(0);
+			//这个就是最新的
+			GsonTop gsonTop = gson.fromJson(tempEntity.get(0).getColumnProperty(), GsonTop.class);
+			//
+			List<GsonColumn> noUpdateList=new ArrayList<GsonColumn>();
+			for (GsonColumn gsonItem : gsonTop.getData()) {
+				noUpdateList.add(gsonItem);
+			}
+			for (GsonColumn tableEntity : gsonTop.getData()) {
+				if(annoName.equals(tableEntity.getName())){
+					//找到了   即修改表结构
+					noUpdateList.remove(tableEntity);
+					List<UpdateColumn> updateColumnList=new ArrayList<UpdateColumn>();
+					updateColumnList.add(new UpdateColumn(annoName, newName, tableEntity.getLength()));
+					
+					boolean success=helper.column_updateOrDelete(t,noUpdateList, updateColumnList, getTranDatabase());
+					if(success){
+						//如果成功了  那么把内部表 修改了 
+						if(!("").equals(newName.trim())){
+							//如果 为空的话 内部表 json 字符串 也没有此字段
+							noUpdateList.add(new GsonColumn(newName, tableEntity.getLength()));
+						}
+						gsonTop.setData(noUpdateList);
+						//转成json 串  存起来
+						finalTable.setColumnProperty(gson.toJson(gsonTop));
+						//然后修改了
+						UpdateEntity(finalTable);
+					}
+					break;
+				}
+			}
+		}
+		
 	}
 	public static boolean getPrintLog(){
 		return printLog;

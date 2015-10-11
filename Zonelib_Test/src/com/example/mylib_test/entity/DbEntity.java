@@ -6,14 +6,26 @@ import Android.Zone.Sqlite.Annotation.Table;
 @Table(name="TwoThree")
 public class DbEntity {
 	private String id;
-	@Column(column="nameAn")
+	@Column(column="nameAn" )
 	private String name;
 	@Column(column="ageAn")
 	private String age;
 	@Column(column="sjAn")
 	private String sj;
-	@Column(column="heAn")
+	@Column(column="heAn" ,length="666")
 	private String he;
+	@Column(column="danteng" ,length="100")
+	private String danteng;
+	private String wwc;
+	public String getWwc() {
+		return wwc;
+	}
+
+	public void setWwc(String wwc) {
+		this.wwc = wwc;
+	}
+
+	
 	public String getHe() {
 		return he;
 	}
@@ -59,4 +71,13 @@ public class DbEntity {
 		return super.toString();
 	}
 
+	public String getDanteng() {
+		return danteng;
+	}
+
+	public void setDanteng(String danteng) {
+		this.danteng = danteng;
+	}
+
+	
 }

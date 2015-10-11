@@ -1,12 +1,33 @@
 package Android.Zone.Sqlite.Annotation.utils;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+
 import Android.Zone.Sqlite.Annotation.Column;
 import Android.Zone.Sqlite.Annotation.Table;
+import Android.Zone.Sqlite.GsonEntity.GsonColumn;
+import Android.Zone.Sqlite.GsonEntity.GsonTop;
 
 public class AnUtils {
+
+	public static String getGsonStr(Class<?> t) {
+		GsonTop gsonTop = new GsonTop();
+		Field[] fields = t.getDeclaredFields();
+		List<GsonColumn> gsonColumnList=new ArrayList<GsonColumn>();
+		for (Field item : fields) {
+			GsonColumn gsonColumn = new GsonColumn();
+			gsonColumn.setName(getAnnoColumn_Name_ByField(item, t));
+			gsonColumn.setLength(getAnnoColumn_Length_ByField(item, t));
+			gsonColumnList.add(gsonColumn);
+		}
+		gsonTop.setData(gsonColumnList);
+		String tempStr =new Gson().toJson(gsonTop);
+		return tempStr;
+	}
 	/**
 	 * 得到注解的表名  如果没有 就getSimpleName
 	 * @param t
@@ -17,6 +38,9 @@ public class AnUtils {
 		Table anno =t.getAnnotation(Table.class);
 		if(anno!=null){
 			temp=anno.name();
+			if("".equals(temp)){
+				throw new IllegalStateException("注解column 不能为 空字符串");
+			}
 		}else{
 			temp=t.getSimpleName();
 		}
