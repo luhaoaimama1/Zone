@@ -1,12 +1,20 @@
 package view;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.content.Context;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-
+/**
+ * 
+ * 宽高模式：  宽不能为充斥内容 即明确长度
+ * 		        高必须是 充斥内容 因为是正方形长度 已经在宽的时候 算出来了
+ * @author Zone
+ *
+ */
 public class ImageGroup_Zone extends LinearLayout {
 	private  int  marginPix=20;
 	private  int  lineNum=1;
@@ -105,9 +113,12 @@ public class ImageGroup_Zone extends LinearLayout {
 		requestLayout();
 		invalidate();
 	}
-	
+	/**
+	 * 测量不考虑 gone  如果考虑 那么 难道宽度 会有变化 
+	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		System.out.println("onMeasure走了");
 		int widthMode=MeasureSpec.getMode(widthMeasureSpec);
 		int heightMode=MeasureSpec.getMode(heightMeasureSpec);
 		int widthSize=MeasureSpec.getSize(widthMeasureSpec);
@@ -161,8 +172,12 @@ public class ImageGroup_Zone extends LinearLayout {
 		setMeasuredDimension(widthSize,height);
 	}
 
+	/**
+	 * 布局考虑 gone
+	 */
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		System.out.println("onLayout走了");
 		int width = getWidth();
 		int height = getHeight();
 		System.err.println("width:"+width+"\theight:"+height);
@@ -200,6 +215,11 @@ public class ImageGroup_Zone extends LinearLayout {
 			else
 				child.setVisibility(View.VISIBLE);
 		}
+	}
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+		System.out.println("onDraw");
 	}
 
 }

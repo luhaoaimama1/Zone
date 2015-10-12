@@ -1,7 +1,9 @@
 package view;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -31,6 +33,8 @@ public class FlowLayout_Zone extends LinearLayout{
 	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		if(log)
+			System.out.println("onMeasure");
 		//当请求测量的时候 把缓存值清空
 		lineWidthlist.clear();
 		lineHeightList.clear();
@@ -178,6 +182,12 @@ public class FlowLayout_Zone extends LinearLayout{
 		int cRealHeight = cHeight + lp.topMargin + lp.bottomMargin;
 		Point point = new Point(cRealWidth, cRealHeight);
 		return point;
+	}
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+		if(log)
+			System.out.println("onDraw");
 	}
 	
 }
