@@ -1,6 +1,5 @@
 package com.example.mylib_test.activity.three_place;
 
-import com.example.mylib_test.Images;
 import com.example.mylib_test.R;
 import com.example.mylib_test.R.drawable;
 import com.example.mylib_test.R.id;

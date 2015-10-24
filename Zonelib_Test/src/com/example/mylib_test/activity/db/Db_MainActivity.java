@@ -1,6 +1,7 @@
 package com.example.mylib_test.activity.db;
 
 import java.util.List;
+
 import Android.Zone.Sqlite.Sqlite_Utils;
 import Android.Zone.Sqlite.Sqlite_Utils.Work;
 import Android.Zone.Sqlite.TableEntity.TableEntity;
@@ -8,8 +9,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+
 import com.example.mylib_test.R;
-import com.example.mylib_test.entity.DbEntity;
+import com.example.mylib_test.activity.db.entity.DbEntity;
 
 public class Db_MainActivity extends Activity implements OnClickListener{
 	@Override

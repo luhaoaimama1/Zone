@@ -7,8 +7,9 @@ import Android.Zone.Sqlite.Sqlite_Utils;
 import Android.Zone.Sqlite.Sqlite_Utils.OnCreate;
 import Android.Zone.Sqlite.Sqlite_Utils.OnUpgrade;
 import android.content.Context;
-import com.example.mylib_test.entity.DbEntity;
-import com.example.mylib_test.entity.MbKb;
+
+import com.example.mylib_test.activity.db.entity.DbEntity;
+import com.example.mylib_test.activity.db.entity.MbKb;
 public class SqliteConfig {
 	@SuppressWarnings("rawtypes")
 	public static List<Class> classList=new ArrayList<Class>();

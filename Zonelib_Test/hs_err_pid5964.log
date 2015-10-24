@@ -1,0 +1,121 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (javaClasses.cpp:136), pid=5964, tid=11748
+#  fatal error: Invalid layout of preloaded class
+#
+# JRE version:  (7.0_67-b01) (build )
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (24.65-b04 mixed mode windows-amd64 compressed oops)
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000000002d6d800):  JavaThread "Unknown thread" [_thread_in_vm, id=11748, stack(0x0000000002d70000,0x0000000002e70000)]
+
+Stack: [0x0000000002d70000,0x0000000002e70000]
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+
+Other Threads:
+
+=>0x0000000002d6d800 (exited) JavaThread "Unknown thread" [_thread_in_vm, id=11748, stack(0x0000000002d70000,0x0000000002e70000)]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+Events (10 events):
+Event: 0.020 loading class 0x0000000002eb5110 done
+Event: 0.020 loading class 0x0000000002eb4b30 done
+Event: 0.020 loading class 0x0000000002eb4b10
+Event: 0.020 loading class 0x0000000002ebcc60
+Event: 0.020 loading class 0x0000000002ebcc60 done
+Event: 0.020 loading class 0x0000000002ebcc90
+Event: 0.020 loading class 0x0000000002ebcc90 done
+Event: 0.020 loading class 0x0000000002ebccc0
+Event: 0.020 loading class 0x0000000002ebccc0 done
+Event: 0.021 loading class 0x0000000002eb4b10 done
+
+
+Dynamic libraries:
+0x00007ff74d4e0000 - 0x00007ff74d513000 	D:\Program Files\Java\jdk1.7.0_67\bin\javaw.exe
+0x00007ff85a2a0000 - 0x00007ff85a44c000 	C:\windows\SYSTEM32\ntdll.dll
+0x00007ff8598e0000 - 0x00007ff859a1a000 	C:\windows\system32\KERNEL32.DLL
+0x00007ff857800000 - 0x00007ff85790f000 	C:\windows\system32\KERNELBASE.dll
+0x00007ff8560b0000 - 0x00007ff856138000 	C:\windows\system32\apphelp.dll
+0x00007ff8498e0000 - 0x00007ff84992f000 	C:\windows\AppPatch\AppPatch64\AcGenral.DLL
+0x00007ff859c30000 - 0x00007ff859cd7000 	C:\windows\system32\msvcrt.dll
+0x00007ff857350000 - 0x00007ff85737b000 	C:\windows\SYSTEM32\SspiCli.dll
+0x00007ff8593d0000 - 0x00007ff859421000 	C:\windows\system32\SHLWAPI.dll
+0x00007ff859ee0000 - 0x00007ff85a051000 	C:\windows\system32\USER32.dll
+0x00007ff85a060000 - 0x00007ff85a1f4000 	C:\windows\system32\ole32.dll
+0x00007ff857e50000 - 0x00007ff859368000 	C:\windows\system32\SHELL32.dll
+0x00007ff856b20000 - 0x00007ff856b3e000 	C:\windows\SYSTEM32\USERENV.dll
+0x00007ff857af0000 - 0x00007ff857b95000 	C:\windows\system32\ADVAPI32.dll
+0x00007ff8490e0000 - 0x00007ff8490fb000 	C:\windows\SYSTEM32\MPR.dll
+0x00007ff859a80000 - 0x00007ff859bc1000 	C:\windows\system32\RPCRT4.dll
+0x00007ff859370000 - 0x00007ff8593c9000 	C:\windows\SYSTEM32\sechost.dll
+0x00007ff859cf0000 - 0x00007ff859ec6000 	C:\windows\SYSTEM32\combase.dll
+0x00007ff859590000 - 0x00007ff8596e0000 	C:\windows\system32\GDI32.dll
+0x00007ff8574b0000 - 0x00007ff8574c4000 	C:\windows\SYSTEM32\profapi.dll
+0x00007ff855ac0000 - 0x00007ff855b5f000 	C:\windows\SYSTEM32\SHCORE.dll
+0x00007ff859a30000 - 0x00007ff859a64000 	C:\windows\system32\IMM32.DLL
+0x00007ff859430000 - 0x00007ff859582000 	C:\windows\system32\MSCTF.dll
+0x00007ff854640000 - 0x00007ff8548ba000 	C:\windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.9600.17810_none_6240b9c7ecbd0bda\COMCTL32.dll
+0x000000005fbc0000 - 0x000000005fc92000 	D:\Program Files\Java\jdk1.7.0_67\jre\bin\msvcr100.dll
+0x00000000604c0000 - 0x0000000060c92000 	D:\Program Files\Java\jdk1.7.0_67\jre\bin\server\jvm.dll
+0x00007ff84f340000 - 0x00007ff84f349000 	C:\windows\SYSTEM32\WSOCK32.dll
+0x00007ff84f890000 - 0x00007ff84f8af000 	C:\windows\SYSTEM32\WINMM.dll
+0x00007ff859ce0000 - 0x00007ff859ce7000 	C:\windows\system32\PSAPI.DLL
+0x00007ff859bd0000 - 0x00007ff859c28000 	C:\windows\system32\WS2_32.dll
+0x00007ff84f3c0000 - 0x00007ff84f3ea000 	C:\windows\SYSTEM32\WINMMBASE.dll
+0x00007ff859ed0000 - 0x00007ff859ed9000 	C:\windows\system32\NSI.dll
+0x00007ff857580000 - 0x00007ff8575ca000 	C:\windows\SYSTEM32\cfgmgr32.dll
+0x00007ff856310000 - 0x00007ff856336000 	C:\windows\SYSTEM32\DEVOBJ.dll
+0x00000000603d0000 - 0x00000000603df000 	D:\Program Files\Java\jdk1.7.0_67\jre\bin\verify.dll
+0x00000000603a0000 - 0x00000000603c8000 	D:\Program Files\Java\jdk1.7.0_67\jre\bin\java.dll
+0x0000000060380000 - 0x0000000060395000 	D:\Program Files\Java\jdk1.7.0_67\jre\bin\zip.dll
+
+VM Arguments:
+jvm_args: -Dfile.encoding=gbk -Xbootclasspath:D:\adt-bundle-windows-x86_64-20140321\adt-bundle-windows-x86_64-20140321\sdk\platforms\android-19\android.jar 
+java_command: com.example.mylib_test.MainMenu
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=D:\Program Files\Java\jdk1.7.0_67
+CLASSPATH=¡°.;D:\Program Files\Java\jdk1.7.0_67\lib\dt.jar;D:\Program Files\Java\jdk1.7.0_67\lib\tools.jar;
+PATH=D:/Program Files/Java/jdk1.7.0_67/bin/../jre/bin/server;D:/Program Files/Java/jdk1.7.0_67/bin/../jre/bin;D:/Program Files/Java/jdk1.7.0_67/bin/../jre/lib/amd64;D:\Program Files\Java\jdk1.7.0_67\bin;D:\Program Files\Java\jdk1.7.0_67\jre\bin;C:\Program Files (x86)\Lenovo\FusionEngine;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Common Files\lenovo\easyplussdk\bin;C:\Program Files (x86)\Lenovo\Lenovo Home\;C:\Python27;C:\Python27\Scripts;D:\adt-bundle-windows-x86_64-20140321\adt-bundle-windows-x86_64-20140321\eclipse;
+USERNAME=Zone
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 69 Stepping 1, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS: Windows 8.1 , 64 bit Build 9600 
+
+CPU:total 4 (2 cores per cpu, 2 threads per core) family 6 model 69 stepping 1, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, avx2, aes, erms, ht, tsc, tscinvbit
+
+Memory: 4k page, physical 4115736k(179816k free), swap 8811160k(1821736k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (24.65-b04) for windows-amd64 JRE (1.7.0_67-b01), built on Jul 25 2014 08:55:00 by "java_re" with unknown MS VC++:1600
+
+time: Wed Oct 14 17:25:56 2015
+elapsed time: 0 seconds
+

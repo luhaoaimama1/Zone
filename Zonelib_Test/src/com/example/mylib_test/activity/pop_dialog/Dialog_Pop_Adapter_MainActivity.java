@@ -1,6 +1,5 @@
 package com.example.mylib_test.activity.pop_dialog;
 
-import com.example.mylib_test.AdapterActivity;
 import com.example.mylib_test.R;
 import com.example.mylib_test.activity.pop_dialog.pop.Pop_Photo;
 

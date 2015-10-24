@@ -8,4 +8,7 @@ public class Child extends FuK{
 	public static void main(String[] args) {
 		PrintUtils.printAllField(new Child());
 	}
+	public class Inner{
+		
+	}
 }

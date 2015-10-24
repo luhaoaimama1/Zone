@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.mylib_test.R;
-import com.example.mylib_test.WifiItem;
 import com.example.mylib_test.R.id;
 import com.example.mylib_test.R.layout;
+import com.example.mylib_test.activity.wifi.entity.WifiItem;
 
 import Android.Zone.Abstract_Class.Adapter_Zone;
 import Android.Zone.Wifi.MyWifiAnd3G;

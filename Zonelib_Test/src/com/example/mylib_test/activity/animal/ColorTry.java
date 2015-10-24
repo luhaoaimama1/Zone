@@ -1,6 +1,6 @@
 package com.example.mylib_test.activity.animal;
 
-import custemView.ColorView;
+import view.testIng.ColorView;
 import android.app.Activity;
 import android.os.Bundle;
 

@@ -11,7 +11,6 @@ public abstract class DialogCustemZone {
 	public boolean isSure = false;
 
 	public DialogCustemZone(Context context) {
-		// TODO Auto-generated constructor stub
 		this.context = context;
 		this.show();
 	}
@@ -23,14 +22,12 @@ public abstract class DialogCustemZone {
 		db.setPositiveButton("确定", new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
 				isSure();
 			}
 		});
 		db.setNegativeButton("取消", new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
 				notSure();
 			}
 		});

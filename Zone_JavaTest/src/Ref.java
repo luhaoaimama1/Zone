@@ -9,6 +9,7 @@ public class Ref {
 	private String a;
 	private List<String> b;
 	private int c;
+	private static final String  DE="0";
 //	private Ref d = new Ref();
 
 	public Ref() {
@@ -22,7 +23,11 @@ public class Ref {
 		ref(new Ref(),PrintProperty.NO_TYPE);
 
 	}
-
+/**
+ * aa
+ * @param r
+ * @param p
+ */
 	public static <T> void ref(T r,PrintProperty p)  {
 		Field[] f = r.getClass().getDeclaredFields();
 		for (Field field : f) {

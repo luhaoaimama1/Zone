@@ -1,6 +1,5 @@
 package com.example.mylib_test.activity.photo_shot;
 import com.example.mylib_test.R;
-import com.example.mylib_test.ShowPicActivity;
 
 import android.content.Intent;
 import android.net.Uri;

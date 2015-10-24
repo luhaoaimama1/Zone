@@ -16,7 +16,13 @@
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="14" />
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true" />
 
+    <!-- android:resizeable="true" -->
     <application
         android:name="com.example.mylib_test.app.Apps"
         android:allowBackup="true"
@@ -38,7 +44,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AdapterActivity"
+            android:name="com.example.mylib_test.activity.pop_dialog.AdapterActivity"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
@@ -50,7 +56,7 @@
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
-            android:name=".ShowPicActivity"
+            android:name="com.example.mylib_test.activity.photo_shot.ShowPicActivity"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
@@ -99,10 +105,6 @@
         </activity>
         <activity
             android:name="com.example.mylib_test.activity.animal.AniPro"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
-        </activity>
-        <activity
-            android:name="com.example.mylib_test.activity.utils.Utils_MainActivity"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
@@ -180,6 +182,11 @@
         </activity>
         <activity
             android:name="other_project.pinyin_sidebar.SideBarActivity"
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:windowSoftInputMode="stateHidden|adjustResize" >
+        </activity>
+        <activity
+            android:name="com.example.mylib_test.activity.utils.Utils_MainActivity"
             android:theme="@android:style/Theme.Light.NoTitleBar"
             android:windowSoftInputMode="stateHidden|adjustResize" >
         </activity>

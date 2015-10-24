@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import Android.Zone.Utils.ViewIDsUtils;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 /**
- * 不支持多布局
  * @author Zone
  */
 public abstract class Adapter_Zone<T> extends BaseAdapter {
@@ -19,9 +20,6 @@ public abstract class Adapter_Zone<T> extends BaseAdapter {
 	private int layout_id;
 	private LayoutInflater mInflater;// 得到一个LayoutInfalter对象用来导入布局
 	private int[] idArray;// 得到一个LayoutInfalter对象用来导入布局
-	
-	private List<Integer> idList=new ArrayList<Integer>();
-	
 	/**
 	 * @param context
 	 * @param data
@@ -50,23 +48,13 @@ public abstract class Adapter_Zone<T> extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup arg2) {
-		ViewHolder<T> holder;
+		ViewHolder holder;
 		if (convertView == null) {
 			//convertView 会重复利用  arg0则不会 所以数据 每次都加载就好了 所以  有关convertView的都是初始化用
-			holder = new ViewHolder<T>();
+			holder = new ViewHolder();
 			convertView = mInflater.inflate(layout_id, null);
 			//把id 都找出来
-			if(!ViewGroup.class.isInstance(convertView)){
-				if(convertView.getId()!=-1){
-					idList.add(convertView.getId());
-				}
-			}else{
-				if(convertView.getId()!=-1){
-					idList.add(convertView.getId());
-				}
-				isVgComeOn(convertView);	
-			}
-			
+			List<Integer> idList = ViewIDsUtils.getIDsByView(convertView);
 			idArray=new int[idList.size()];
 			for (int i = 0; i < idList.size(); i++) {
 				idArray[i]=idList.get(i);
@@ -77,8 +65,10 @@ public abstract class Adapter_Zone<T> extends BaseAdapter {
 				}
 			//给View添加监听 
 			convertView.setTag(holder);
+//			  System.out.println("初始化：position:"+position);
 		} else {
-			holder = ((ViewHolder<T>) convertView.getTag());
+			holder = ((ViewHolder) convertView.getTag());
+//			System.out.println("复用 position:"+position);
 		}
 		//布局都已经弄好了  就是往view里 填数据   holder里有view 有index 有该组的数据
 		T dataIndex = data.get(position);
@@ -86,33 +76,12 @@ public abstract class Adapter_Zone<T> extends BaseAdapter {
 		return convertView;
 	}
 
-	private void isVgComeOn(View convertView) {
-		if(ViewGroup.class.isInstance(convertView)){
-			ViewGroup vg = (ViewGroup)convertView;
-			for (int i = 0; i < vg.getChildCount(); i++) {
-				View child = vg.getChildAt(i);
-				int cId = child.getId();
-				if(cId!=-1){
-					//看了源码发现-1 是没有id的说
-					idList.add(cId);
-				}
-				//如果这个view是 viewGroup继续找
-				isVgComeOn(child);
-			}
-			
-		}
-	}
-
-
 	/**
 	 * @author   仅仅是存视图的
 	 * @author Map<String,View> map
 	 */
-	public  class ViewHolder<T> {
+	public  class ViewHolder {
 		public	 Map<Integer,View> map=new  HashMap<Integer, View>();
-	}
-	public String toString(int parameter) {
-		return String.valueOf(parameter);
 	}
 
 	/**

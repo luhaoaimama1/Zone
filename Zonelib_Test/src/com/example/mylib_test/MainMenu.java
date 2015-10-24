@@ -2,9 +2,11 @@ package com.example.mylib_test;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.example.mylib_test.activity.animal.Animal_MainActivity;
 import com.example.mylib_test.activity.custom_view.CustomView_MainActivity;
 import com.example.mylib_test.activity.db.Db_MainActivity;
+import com.example.mylib_test.activity.db.entity.MenuEntity;
 import com.example.mylib_test.activity.file.FileTestActivity;
 import com.example.mylib_test.activity.http.Http_MainActivity;
 import com.example.mylib_test.activity.photo_shot.Photo_Shot_MainActivity;
@@ -12,7 +14,6 @@ import com.example.mylib_test.activity.pop_dialog.Dialog_Pop_Adapter_MainActivit
 import com.example.mylib_test.activity.three_place.ThirdParty_MainActivity;
 import com.example.mylib_test.activity.utils.Utils_MainActivity;
 import com.example.mylib_test.activity.wifi.Wifi3g_MainActivity;
-import com.example.mylib_test.entity.MenuEntity;
 
 public class MainMenu {
 	public static List<MenuEntity> menu=new ArrayList<MenuEntity>();

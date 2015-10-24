@@ -98,6 +98,7 @@ containing a value of this type.
          */
         public static final int activity_horizontal_margin=0x7f050000;
         public static final int activity_vertical_margin=0x7f050001;
+        public static final int test=0x7f050002;
     }
     public static final class drawable {
         public static final int a=0x7f020000;

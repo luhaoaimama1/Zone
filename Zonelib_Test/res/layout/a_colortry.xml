@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <custemView.ColorView
+    <view.testIng.ColorView
         android:layout_width="500dp"
         android:layout_height="500dp" >
-    </custemView.ColorView>
+    </view.testIng.ColorView>
 
 </RelativeLayout>

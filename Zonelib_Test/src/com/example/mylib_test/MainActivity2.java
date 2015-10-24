@@ -1,7 +1,9 @@
 package com.example.mylib_test;
 
 import java.util.Map;
-import com.example.mylib_test.entity.MenuEntity;
+
+import com.example.mylib_test.activity.db.entity.MenuEntity;
+
 import Android.Zone.Abstract_Class.Adapter_Zone;
 import android.app.Activity;
 import android.content.Intent;

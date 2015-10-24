@@ -7,6 +7,8 @@ import Android.Zone.Utils.KeyBoardUtils;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
@@ -21,6 +23,17 @@ public class Utils_MainActivity extends Activity implements OnClickListener{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.a_utils_test);
 		keyBoardTest();
+		
+
+        DisplayMetrics metric = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metric);
+        int width = metric.widthPixels;  // ÆÁÄ»¿í¶È£¨ÏñËØ£©
+        int height = metric.heightPixels;  // ÆÁÄ»¸ß¶È£¨ÏñËØ£©
+        float density = metric.density;  // ÆÁÄ»ÃÜ¶È£¨0.75 / 1.0 / 1.5£©
+        int densityDpi = metric.densityDpi;  // ÆÁÄ»ÃÜ¶ÈDPI£¨120 / 160 / 240£©
+        Log.e("Utils_MainActivity:¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª-" + "  DisplayMetrics", "density=" + density + "; densityDPI=" + densityDpi);  
+        float tem = getResources().getDimension(R.dimen.test);
+        System.err.println(tem);
 	
 	}
 
